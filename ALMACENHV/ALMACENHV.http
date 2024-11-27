@@ -1,0 +1,6 @@
+@ALMACENHV_HostAddress = http://localhost:5017
+
+GET {{ALMACENHV_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

@@ -1,0 +1,329 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\Lenovo\\source\\repos\\ALMACENHV\\ALMACENHV\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{FC48DE2F-AC50-478A-A727-4DF45FDA3D1E}|ALMACENHV\\ALMACENHV.csproj|c:\\users\\lenovo\\source\\repos\\almacenhv\\almacenhv\\almacenhv\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{FC48DE2F-AC50-478A-A727-4DF45FDA3D1E}|ALMACENHV\\ALMACENHV.csproj|solutionrelative:almacenhv\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{FC48DE2F-AC50-478A-A727-4DF45FDA3D1E}|ALMACENHV\\ALMACENHV.csproj|c:\\users\\lenovo\\source\\repos\\almacenhv\\almacenhv\\almacenhv\\migrations\\20241115145020_capturependingchanges.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{FC48DE2F-AC50-478A-A727-4DF45FDA3D1E}|ALMACENHV\\ALMACENHV.csproj|solutionrelative:almacenhv\\migrations\\20241115145020_capturependingchanges.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{FC48DE2F-AC50-478A-A727-4DF45FDA3D1E}|ALMACENHV\\ALMACENHV.csproj|c:\\users\\lenovo\\source\\repos\\almacenhv\\almacenhv\\almacenhv\\controllers\\registroentradascontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{FC48DE2F-AC50-478A-A727-4DF45FDA3D1E}|ALMACENHV\\ALMACENHV.csproj|solutionrelative:almacenhv\\controllers\\registroentradascontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{FC48DE2F-AC50-478A-A727-4DF45FDA3D1E}|ALMACENHV\\ALMACENHV.csproj|c:\\users\\lenovo\\source\\repos\\almacenhv\\almacenhv\\almacenhv\\controllers\\usuarioscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{FC48DE2F-AC50-478A-A727-4DF45FDA3D1E}|ALMACENHV\\ALMACENHV.csproj|solutionrelative:almacenhv\\controllers\\usuarioscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{FC48DE2F-AC50-478A-A727-4DF45FDA3D1E}|ALMACENHV\\ALMACENHV.csproj|c:\\users\\lenovo\\source\\repos\\almacenhv\\almacenhv\\almacenhv\\models\\tudbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{FC48DE2F-AC50-478A-A727-4DF45FDA3D1E}|ALMACENHV\\ALMACENHV.csproj|solutionrelative:almacenhv\\models\\tudbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{FC48DE2F-AC50-478A-A727-4DF45FDA3D1E}|ALMACENHV\\ALMACENHV.csproj|c:\\users\\lenovo\\source\\repos\\almacenhv\\almacenhv\\almacenhv\\models\\models.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{FC48DE2F-AC50-478A-A727-4DF45FDA3D1E}|ALMACENHV\\ALMACENHV.csproj|solutionrelative:almacenhv\\models\\models.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{FC48DE2F-AC50-478A-A727-4DF45FDA3D1E}|ALMACENHV\\ALMACENHV.csproj|c:\\users\\lenovo\\source\\repos\\almacenhv\\almacenhv\\almacenhv\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{FC48DE2F-AC50-478A-A727-4DF45FDA3D1E}|ALMACENHV\\ALMACENHV.csproj|solutionrelative:almacenhv\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{FC48DE2F-AC50-478A-A727-4DF45FDA3D1E}|ALMACENHV\\ALMACENHV.csproj|c:\\users\\lenovo\\source\\repos\\almacenhv\\almacenhv\\almacenhv\\controllers\\registroingresofotoscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{FC48DE2F-AC50-478A-A727-4DF45FDA3D1E}|ALMACENHV\\ALMACENHV.csproj|solutionrelative:almacenhv\\controllers\\registroingresofotoscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{FC48DE2F-AC50-478A-A727-4DF45FDA3D1E}|ALMACENHV\\ALMACENHV.csproj|c:\\users\\lenovo\\source\\repos\\almacenhv\\almacenhv\\almacenhv\\controllers\\registrosalidadetallescontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{FC48DE2F-AC50-478A-A727-4DF45FDA3D1E}|ALMACENHV\\ALMACENHV.csproj|solutionrelative:almacenhv\\controllers\\registrosalidadetallescontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{FC48DE2F-AC50-478A-A727-4DF45FDA3D1E}|ALMACENHV\\ALMACENHV.csproj|c:\\users\\lenovo\\source\\repos\\almacenhv\\almacenhv\\almacenhv\\controllers\\registrosalidascontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{FC48DE2F-AC50-478A-A727-4DF45FDA3D1E}|ALMACENHV\\ALMACENHV.csproj|solutionrelative:almacenhv\\controllers\\registrosalidascontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{FC48DE2F-AC50-478A-A727-4DF45FDA3D1E}|ALMACENHV\\ALMACENHV.csproj|c:\\users\\lenovo\\source\\repos\\almacenhv\\almacenhv\\almacenhv\\controllers\\registroingresodetallescontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{FC48DE2F-AC50-478A-A727-4DF45FDA3D1E}|ALMACENHV\\ALMACENHV.csproj|solutionrelative:almacenhv\\controllers\\registroingresodetallescontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{FC48DE2F-AC50-478A-A727-4DF45FDA3D1E}|ALMACENHV\\ALMACENHV.csproj|c:\\users\\lenovo\\source\\repos\\almacenhv\\almacenhv\\almacenhv\\controllers\\ubicacionescontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{FC48DE2F-AC50-478A-A727-4DF45FDA3D1E}|ALMACENHV\\ALMACENHV.csproj|solutionrelative:almacenhv\\controllers\\ubicacionescontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{FC48DE2F-AC50-478A-A727-4DF45FDA3D1E}|ALMACENHV\\ALMACENHV.csproj|c:\\users\\lenovo\\source\\repos\\almacenhv\\almacenhv\\almacenhv\\controllers\\seccionescontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{FC48DE2F-AC50-478A-A727-4DF45FDA3D1E}|ALMACENHV\\ALMACENHV.csproj|solutionrelative:almacenhv\\controllers\\seccionescontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{FC48DE2F-AC50-478A-A727-4DF45FDA3D1E}|ALMACENHV\\ALMACENHV.csproj|c:\\users\\lenovo\\source\\repos\\almacenhv\\almacenhv\\almacenhv\\controllers\\proveedorescontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{FC48DE2F-AC50-478A-A727-4DF45FDA3D1E}|ALMACENHV\\ALMACENHV.csproj|solutionrelative:almacenhv\\controllers\\proveedorescontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{FC48DE2F-AC50-478A-A727-4DF45FDA3D1E}|ALMACENHV\\ALMACENHV.csproj|c:\\users\\lenovo\\source\\repos\\almacenhv\\almacenhv\\almacenhv\\controllers\\eventoscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{FC48DE2F-AC50-478A-A727-4DF45FDA3D1E}|ALMACENHV\\ALMACENHV.csproj|solutionrelative:almacenhv\\controllers\\eventoscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{FC48DE2F-AC50-478A-A727-4DF45FDA3D1E}|ALMACENHV\\ALMACENHV.csproj|c:\\users\\lenovo\\source\\repos\\almacenhv\\almacenhv\\almacenhv\\controllers\\cargoscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{FC48DE2F-AC50-478A-A727-4DF45FDA3D1E}|ALMACENHV\\ALMACENHV.csproj|solutionrelative:almacenhv\\controllers\\cargoscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{FC48DE2F-AC50-478A-A727-4DF45FDA3D1E}|ALMACENHV\\ALMACENHV.csproj|c:\\users\\lenovo\\source\\repos\\almacenhv\\almacenhv\\almacenhv\\controllers\\apuntescontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{FC48DE2F-AC50-478A-A727-4DF45FDA3D1E}|ALMACENHV\\ALMACENHV.csproj|solutionrelative:almacenhv\\controllers\\apuntescontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{FC48DE2F-AC50-478A-A727-4DF45FDA3D1E}|ALMACENHV\\ALMACENHV.csproj|c:\\users\\lenovo\\source\\repos\\almacenhv\\almacenhv\\almacenhv\\controllers\\productoscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{FC48DE2F-AC50-478A-A727-4DF45FDA3D1E}|ALMACENHV\\ALMACENHV.csproj|solutionrelative:almacenhv\\controllers\\productoscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{FC48DE2F-AC50-478A-A727-4DF45FDA3D1E}|ALMACENHV\\ALMACENHV.csproj|c:\\users\\lenovo\\source\\repos\\almacenhv\\almacenhv\\almacenhv\\controllers\\rolescontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{FC48DE2F-AC50-478A-A727-4DF45FDA3D1E}|ALMACENHV\\ALMACENHV.csproj|solutionrelative:almacenhv\\controllers\\rolescontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 4,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{cce594b6-0c39-4442-ba28-10c64ac7e89f}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "20241115145020_CapturePendingChanges.cs",
+              "DocumentMoniker": "C:\\Users\\Lenovo\\source\\repos\\ALMACENHV\\ALMACENHV\\ALMACENHV\\Migrations\\20241115145020_CapturePendingChanges.cs",
+              "RelativeDocumentMoniker": "ALMACENHV\\Migrations\\20241115145020_CapturePendingChanges.cs",
+              "ToolTip": "C:\\Users\\Lenovo\\source\\repos\\ALMACENHV\\ALMACENHV\\ALMACENHV\\Migrations\\20241115145020_CapturePendingChanges.cs",
+              "RelativeToolTip": "ALMACENHV\\Migrations\\20241115145020_CapturePendingChanges.cs",
+              "ViewState": "AgIAAHIBAAAAAAAAAAAuwHYBAAAnAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-11-15T14:50:20.561Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "RegistroEntradasController.cs",
+              "DocumentMoniker": "C:\\Users\\Lenovo\\source\\repos\\ALMACENHV\\ALMACENHV\\ALMACENHV\\Controllers\\RegistroEntradasController.cs",
+              "RelativeDocumentMoniker": "ALMACENHV\\Controllers\\RegistroEntradasController.cs",
+              "ToolTip": "C:\\Users\\Lenovo\\source\\repos\\ALMACENHV\\ALMACENHV\\ALMACENHV\\Controllers\\RegistroEntradasController.cs",
+              "RelativeToolTip": "ALMACENHV\\Controllers\\RegistroEntradasController.cs",
+              "ViewState": "AgIAAE0AAAAAAAAAAAAxwGAAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-11-15T02:17:12.022Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\Users\\Lenovo\\source\\repos\\ALMACENHV\\ALMACENHV\\ALMACENHV\\Program.cs",
+              "RelativeDocumentMoniker": "ALMACENHV\\Program.cs",
+              "ToolTip": "C:\\Users\\Lenovo\\source\\repos\\ALMACENHV\\ALMACENHV\\ALMACENHV\\Program.cs",
+              "RelativeToolTip": "ALMACENHV\\Program.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABsAAAAXAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-11-15T01:36:46.575Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "appsettings.json",
+              "DocumentMoniker": "C:\\Users\\Lenovo\\source\\repos\\ALMACENHV\\ALMACENHV\\ALMACENHV\\appsettings.json",
+              "RelativeDocumentMoniker": "ALMACENHV\\appsettings.json",
+              "ToolTip": "C:\\Users\\Lenovo\\source\\repos\\ALMACENHV\\ALMACENHV\\ALMACENHV\\appsettings.json",
+              "RelativeToolTip": "ALMACENHV\\appsettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2024-11-15T01:38:48.491Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "Models.cs",
+              "DocumentMoniker": "C:\\Users\\Lenovo\\source\\repos\\ALMACENHV\\ALMACENHV\\ALMACENHV\\Models\\Models.cs",
+              "RelativeDocumentMoniker": "ALMACENHV\\Models\\Models.cs",
+              "ToolTip": "C:\\Users\\Lenovo\\source\\repos\\ALMACENHV\\ALMACENHV\\ALMACENHV\\Models\\Models.cs",
+              "RelativeToolTip": "ALMACENHV\\Models\\Models.cs",
+              "ViewState": "AgIAABkAAAAAAAAAAAA0wIAAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-11-15T01:51:23.25Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "TuDbContext.cs",
+              "DocumentMoniker": "C:\\Users\\Lenovo\\source\\repos\\ALMACENHV\\ALMACENHV\\ALMACENHV\\Models\\TuDbContext.cs",
+              "RelativeDocumentMoniker": "ALMACENHV\\Models\\TuDbContext.cs",
+              "ToolTip": "C:\\Users\\Lenovo\\source\\repos\\ALMACENHV\\ALMACENHV\\ALMACENHV\\Models\\TuDbContext.cs",
+              "RelativeToolTip": "ALMACENHV\\Models\\TuDbContext.cs",
+              "ViewState": "AgIAABUAAAAAAAAAAAA2wFsAAAA0AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-11-15T01:41:46.656Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "UsuariosController.cs",
+              "DocumentMoniker": "C:\\Users\\Lenovo\\source\\repos\\ALMACENHV\\ALMACENHV\\ALMACENHV\\Controllers\\UsuariosController.cs",
+              "RelativeDocumentMoniker": "ALMACENHV\\Controllers\\UsuariosController.cs",
+              "ToolTip": "C:\\Users\\Lenovo\\source\\repos\\ALMACENHV\\ALMACENHV\\ALMACENHV\\Controllers\\UsuariosController.cs",
+              "RelativeToolTip": "ALMACENHV\\Controllers\\UsuariosController.cs",
+              "ViewState": "AgIAAE0AAAAAAAAAAAAxwGAAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-11-15T02:07:26.56Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "RegistroSalidasController.cs",
+              "DocumentMoniker": "C:\\Users\\Lenovo\\source\\repos\\ALMACENHV\\ALMACENHV\\ALMACENHV\\Controllers\\RegistroSalidasController.cs",
+              "RelativeDocumentMoniker": "ALMACENHV\\Controllers\\RegistroSalidasController.cs",
+              "ToolTip": "C:\\Users\\Lenovo\\source\\repos\\ALMACENHV\\ALMACENHV\\ALMACENHV\\Controllers\\RegistroSalidasController.cs",
+              "RelativeToolTip": "ALMACENHV\\Controllers\\RegistroSalidasController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAfAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-11-15T02:17:27.335Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "RegistroIngresoFotosController.cs",
+              "DocumentMoniker": "C:\\Users\\Lenovo\\source\\repos\\ALMACENHV\\ALMACENHV\\ALMACENHV\\Controllers\\RegistroIngresoFotosController.cs",
+              "RelativeDocumentMoniker": "ALMACENHV\\Controllers\\RegistroIngresoFotosController.cs",
+              "ToolTip": "C:\\Users\\Lenovo\\source\\repos\\ALMACENHV\\ALMACENHV\\ALMACENHV\\Controllers\\RegistroIngresoFotosController.cs",
+              "RelativeToolTip": "ALMACENHV\\Controllers\\RegistroIngresoFotosController.cs",
+              "ViewState": "AgIAAE8AAAAAAAAAAAAUwGAAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-11-15T02:21:36.055Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "RegistroIngresoDetallesController.cs",
+              "DocumentMoniker": "C:\\Users\\Lenovo\\source\\repos\\ALMACENHV\\ALMACENHV\\ALMACENHV\\Controllers\\RegistroIngresoDetallesController.cs",
+              "RelativeDocumentMoniker": "ALMACENHV\\Controllers\\RegistroIngresoDetallesController.cs",
+              "ToolTip": "C:\\Users\\Lenovo\\source\\repos\\ALMACENHV\\ALMACENHV\\ALMACENHV\\Controllers\\RegistroIngresoDetallesController.cs",
+              "RelativeToolTip": "ALMACENHV\\Controllers\\RegistroIngresoDetallesController.cs",
+              "ViewState": "AgIAAE0AAAAAAAAAAAAxwGAAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-11-15T02:19:27.001Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "RegistroSalidaDetallesController.cs",
+              "DocumentMoniker": "C:\\Users\\Lenovo\\source\\repos\\ALMACENHV\\ALMACENHV\\ALMACENHV\\Controllers\\RegistroSalidaDetallesController.cs",
+              "RelativeDocumentMoniker": "ALMACENHV\\Controllers\\RegistroSalidaDetallesController.cs",
+              "ToolTip": "C:\\Users\\Lenovo\\source\\repos\\ALMACENHV\\ALMACENHV\\ALMACENHV\\Controllers\\RegistroSalidaDetallesController.cs",
+              "RelativeToolTip": "ALMACENHV\\Controllers\\RegistroSalidaDetallesController.cs",
+              "ViewState": "AgIAAE0AAAAAAAAAAAAxwGAAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-11-15T02:19:45.583Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "UbicacionesController.cs",
+              "DocumentMoniker": "C:\\Users\\Lenovo\\source\\repos\\ALMACENHV\\ALMACENHV\\ALMACENHV\\Controllers\\UbicacionesController.cs",
+              "RelativeDocumentMoniker": "ALMACENHV\\Controllers\\UbicacionesController.cs",
+              "ToolTip": "C:\\Users\\Lenovo\\source\\repos\\ALMACENHV\\ALMACENHV\\ALMACENHV\\Controllers\\UbicacionesController.cs",
+              "RelativeToolTip": "ALMACENHV\\Controllers\\UbicacionesController.cs",
+              "ViewState": "AgIAAE0AAAAAAAAAAAAxwGAAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-11-15T02:16:56.38Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "SeccionesController.cs",
+              "DocumentMoniker": "C:\\Users\\Lenovo\\source\\repos\\ALMACENHV\\ALMACENHV\\ALMACENHV\\Controllers\\SeccionesController.cs",
+              "RelativeDocumentMoniker": "ALMACENHV\\Controllers\\SeccionesController.cs",
+              "ToolTip": "C:\\Users\\Lenovo\\source\\repos\\ALMACENHV\\ALMACENHV\\ALMACENHV\\Controllers\\SeccionesController.cs",
+              "RelativeToolTip": "ALMACENHV\\Controllers\\SeccionesController.cs",
+              "ViewState": "AgIAAE0AAAAAAAAAAAAxwGAAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-11-15T02:16:14.497Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "ProveedoresController.cs",
+              "DocumentMoniker": "C:\\Users\\Lenovo\\source\\repos\\ALMACENHV\\ALMACENHV\\ALMACENHV\\Controllers\\ProveedoresController.cs",
+              "RelativeDocumentMoniker": "ALMACENHV\\Controllers\\ProveedoresController.cs",
+              "ToolTip": "C:\\Users\\Lenovo\\source\\repos\\ALMACENHV\\ALMACENHV\\ALMACENHV\\Controllers\\ProveedoresController.cs",
+              "RelativeToolTip": "ALMACENHV\\Controllers\\ProveedoresController.cs",
+              "ViewState": "AgIAAE0AAAAAAAAAAAAxwFYAAAAuAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-11-15T02:15:56.169Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 14,
+              "Title": "EventosController.cs",
+              "DocumentMoniker": "C:\\Users\\Lenovo\\source\\repos\\ALMACENHV\\ALMACENHV\\ALMACENHV\\Controllers\\EventosController.cs",
+              "RelativeDocumentMoniker": "ALMACENHV\\Controllers\\EventosController.cs",
+              "ToolTip": "C:\\Users\\Lenovo\\source\\repos\\ALMACENHV\\ALMACENHV\\ALMACENHV\\Controllers\\EventosController.cs",
+              "RelativeToolTip": "ALMACENHV\\Controllers\\EventosController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAfAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-11-15T02:09:40.67Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 16,
+              "Title": "ApuntesController.cs",
+              "DocumentMoniker": "C:\\Users\\Lenovo\\source\\repos\\ALMACENHV\\ALMACENHV\\ALMACENHV\\Controllers\\ApuntesController.cs",
+              "RelativeDocumentMoniker": "ALMACENHV\\Controllers\\ApuntesController.cs",
+              "ToolTip": "C:\\Users\\Lenovo\\source\\repos\\ALMACENHV\\ALMACENHV\\ALMACENHV\\Controllers\\ApuntesController.cs",
+              "RelativeToolTip": "ALMACENHV\\Controllers\\ApuntesController.cs",
+              "ViewState": "AgIAAE0AAAAAAAAAAAAxwGAAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-11-15T02:09:24.646Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 17,
+              "Title": "ProductosController.cs",
+              "DocumentMoniker": "C:\\Users\\Lenovo\\source\\repos\\ALMACENHV\\ALMACENHV\\ALMACENHV\\Controllers\\ProductosController.cs",
+              "RelativeDocumentMoniker": "ALMACENHV\\Controllers\\ProductosController.cs",
+              "ToolTip": "C:\\Users\\Lenovo\\source\\repos\\ALMACENHV\\ALMACENHV\\ALMACENHV\\Controllers\\ProductosController.cs",
+              "RelativeToolTip": "ALMACENHV\\Controllers\\ProductosController.cs",
+              "ViewState": "AgIAAE0AAAAAAAAAAAAxwGAAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-11-15T02:07:42.628Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 18,
+              "Title": "RolesController.cs",
+              "DocumentMoniker": "C:\\Users\\Lenovo\\source\\repos\\ALMACENHV\\ALMACENHV\\ALMACENHV\\Controllers\\RolesController.cs",
+              "RelativeDocumentMoniker": "ALMACENHV\\Controllers\\RolesController.cs",
+              "ToolTip": "C:\\Users\\Lenovo\\source\\repos\\ALMACENHV\\ALMACENHV\\ALMACENHV\\Controllers\\RolesController.cs",
+              "RelativeToolTip": "ALMACENHV\\Controllers\\RolesController.cs",
+              "ViewState": "AgIAAE8AAAAAAAAAAAAUwGAAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-11-15T02:04:15.319Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 15,
+              "Title": "CargosController.cs",
+              "DocumentMoniker": "C:\\Users\\Lenovo\\source\\repos\\ALMACENHV\\ALMACENHV\\ALMACENHV\\Controllers\\CargosController.cs",
+              "RelativeDocumentMoniker": "ALMACENHV\\Controllers\\CargosController.cs",
+              "ToolTip": "C:\\Users\\Lenovo\\source\\repos\\ALMACENHV\\ALMACENHV\\ALMACENHV\\Controllers\\CargosController.cs",
+              "RelativeToolTip": "ALMACENHV\\Controllers\\CargosController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-11-15T01:53:21.437Z"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
