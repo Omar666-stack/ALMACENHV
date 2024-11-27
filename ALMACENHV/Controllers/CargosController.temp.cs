@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ALMACENHV.Models;
 
@@ -18,80 +18,80 @@ namespace ALMACENHV.Controllers
 
         // GET: api/Cargos
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<>>> GetCargos()
+        public async Task<ActionResult<IEnumerable<Cargo>>> GetCargos()
         {
             return await HandleDbOperation(async () =>
             {
-                var items = await _context.Cargos.ToListAsync();
-                if (!items.Any())
+                var cargos = await _context.Cargos.ToListAsync();
+                if (!cargos.Any())
                 {
-                    _logger.LogInformation("No se encontraron registros");
-                    return new List<>();
+                    _logger.LogInformation("No se encontraron cargos");
+                    return new List<Cargo>();
                 }
-                return items;
+                return cargos;
             });
         }
 
         // GET: api/Cargos/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<>> Get(int id)
+        public async Task<ActionResult<Cargo>> GetCargo(int id)
         {
             return await HandleDbOperation(async () =>
             {
-                var item = await _context.Cargos.FindAsync(id);
-                if (item == null)
+                var cargo = await _context.Cargos.FindAsync(id);
+                if (cargo == null)
                 {
-                    _logger.LogWarning("Registro no encontrado: {Id}", id);
+                    _logger.LogWarning("Cargo no encontrado: {Id}", id);
                     return null;
                 }
-                return item;
+                return cargo;
             });
         }
 
         // PUT: api/Cargos/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> Put(int id,  item)
+        public async Task<IActionResult> PutCargo(int id, Cargo cargo)
         {
-            if (id != item.ID)
+            if (id != cargo.CargoID)
             {
-                return BadRequest("El ID no coincide con el registro a actualizar");
+                return BadRequest("El ID no coincide con el cargo a actualizar");
             }
 
             return await HandleDbOperation(async () =>
             {
-                _context.Entry(item).State = EntityState.Modified;
+                _context.Entry(cargo).State = EntityState.Modified;
                 await _context.SaveChangesAsync();
-                return item;
+                return cargo;
             });
         }
 
         // POST: api/Cargos
         [HttpPost]
-        public async Task<ActionResult<>> Post( item)
+        public async Task<ActionResult<Cargo>> PostCargo(Cargo cargo)
         {
             return await HandleDbOperation(async () =>
             {
-                _context.Cargos.Add(item);
+                _context.Cargos.Add(cargo);
                 await _context.SaveChangesAsync();
-                return item;
+                return cargo;
             });
         }
 
         // DELETE: api/Cargos/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> DeleteCargo(int id)
         {
             return await HandleDbOperation(async () =>
             {
-                var item = await _context.Cargos.FindAsync(id);
-                if (item == null)
+                var cargo = await _context.Cargos.FindAsync(id);
+                if (cargo == null)
                 {
                     return null;
                 }
 
-                _context.Cargos.Remove(item);
+                _context.Cargos.Remove(cargo);
                 await _context.SaveChangesAsync();
-                return item;
+                return cargo;
             });
         }
     }

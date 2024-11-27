@@ -1,97 +1,98 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using ALMACENHV.Models; // Asegúrate de que este espacio de nombres esté incluido
+using ALMACENHV.Models;
 
 namespace ALMACENHV.Controllers
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public class ProductosController : ControllerBase
+    public class ProductosController : BaseController
     {
         private readonly TuDbContext _context;
+        private readonly ILogger<ProductosController> _logger;
 
-        public ProductosController(TuDbContext context)
+        public ProductosController(TuDbContext context, ILogger<ProductosController> logger)
+            : base(logger)
         {
             _context = context;
+            _logger = logger;
         }
 
+        // GET: api/Productos
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Producto>>> GetProductos()
+        public async Task<ActionResult<IEnumerable<>>> GetProductos()
         {
-            return await _context.Productos.ToListAsync();
+            return await HandleDbOperation(async () =>
+            {
+                var items = await _context.Productos.ToListAsync();
+                if (!items.Any())
+                {
+                    _logger.LogInformation("No se encontraron registros");
+                    return new List<>();
+                }
+                return items;
+            });
         }
 
+        // GET: api/Productos/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Producto>> GetProducto(int id)
+        public async Task<ActionResult<>> Get(int id)
         {
-            var producto = await _context.Productos.FindAsync(id);
-
-            if (producto == null)
+            return await HandleDbOperation(async () =>
             {
-                return NotFound();
-            }
-
-            return producto;
+                var item = await _context.Productos.FindAsync(id);
+                if (item == null)
+                {
+                    _logger.LogWarning("Registro no encontrado: {Id}", id);
+                    return null;
+                }
+                return item;
+            });
         }
 
-        [HttpPost]
-        public async Task<ActionResult<Producto>> PostProducto(Producto producto)
-        {
-            _context.Productos.Add(producto);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetProducto", new { id = producto.ProductoID }, producto);
-        }
-
+        // PUT: api/Productos/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutProducto(int id, Producto producto)
+        public async Task<IActionResult> Put(int id,  item)
         {
-            if (id != producto.ProductoID)
+            if (id != item.ID)
             {
-                return BadRequest();
+                return BadRequest("El ID no coincide con el registro a actualizar");
             }
 
-            _context.Entry(producto).State = EntityState.Modified;
-
-            try
+            return await HandleDbOperation(async () =>
             {
+                _context.Entry(item).State = EntityState.Modified;
                 await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!ProductoExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
+                return item;
+            });
         }
 
+        // POST: api/Productos
+        [HttpPost]
+        public async Task<ActionResult<>> Post( item)
+        {
+            return await HandleDbOperation(async () =>
+            {
+                _context.Productos.Add(item);
+                await _context.SaveChangesAsync();
+                return item;
+            });
+        }
+
+        // DELETE: api/Productos/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteProducto(int id)
+        public async Task<IActionResult> Delete(int id)
         {
-            var producto = await _context.Productos.FindAsync(id);
-            if (producto == null)
+            return await HandleDbOperation(async () =>
             {
-                return NotFound();
-            }
+                var item = await _context.Productos.FindAsync(id);
+                if (item == null)
+                {
+                    return null;
+                }
 
-            _context.Productos.Remove(producto);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
-
-        private bool ProductoExists(int id)
-        {
-            return _context.Productos.Any(e => e.ProductoID == id);
+                _context.Productos.Remove(item);
+                await _context.SaveChangesAsync();
+                return item;
+            });
         }
     }
 }

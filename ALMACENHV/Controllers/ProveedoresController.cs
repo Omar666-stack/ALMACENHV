@@ -1,97 +1,98 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using ALMACENHV.Models; // Asegúrate de que este espacio de nombres esté incluido
+using ALMACENHV.Models;
 
 namespace ALMACENHV.Controllers
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public class ProveedoresController : ControllerBase
+    public class ProveedoresController : BaseController
     {
         private readonly TuDbContext _context;
+        private readonly ILogger<ProveedoresController> _logger;
 
-        public ProveedoresController(TuDbContext context)
+        public ProveedoresController(TuDbContext context, ILogger<ProveedoresController> logger)
+            : base(logger)
         {
             _context = context;
+            _logger = logger;
         }
 
+        // GET: api/Proveedores
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Proveedor>>> GetProveedores()
+        public async Task<ActionResult<IEnumerable<>>> GetProveedores()
         {
-            return await _context.Proveedores.ToListAsync();
+            return await HandleDbOperation(async () =>
+            {
+                var items = await _context.Proveedores.ToListAsync();
+                if (!items.Any())
+                {
+                    _logger.LogInformation("No se encontraron registros");
+                    return new List<>();
+                }
+                return items;
+            });
         }
 
+        // GET: api/Proveedores/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Proveedor>> GetProveedor(int id)
+        public async Task<ActionResult<>> Get(int id)
         {
-            var proveedor = await _context.Proveedores.FindAsync(id);
-
-            if (proveedor == null)
+            return await HandleDbOperation(async () =>
             {
-                return NotFound();
-            }
-
-            return proveedor;
+                var item = await _context.Proveedores.FindAsync(id);
+                if (item == null)
+                {
+                    _logger.LogWarning("Registro no encontrado: {Id}", id);
+                    return null;
+                }
+                return item;
+            });
         }
 
-        [HttpPost]
-        public async Task<ActionResult<Proveedor>> PostProveedor(Proveedor proveedor)
-        {
-            _context.Proveedores.Add(proveedor);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetProveedor", new { id = proveedor.ProveedorID }, proveedor);
-        }
-
+        // PUT: api/Proveedores/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutProveedor(int id, Proveedor proveedor)
+        public async Task<IActionResult> Put(int id,  item)
         {
-            if (id != proveedor.ProveedorID)
+            if (id != item.ID)
             {
-                return BadRequest();
+                return BadRequest("El ID no coincide con el registro a actualizar");
             }
 
-            _context.Entry(proveedor).State = EntityState.Modified;
-
-            try
+            return await HandleDbOperation(async () =>
             {
+                _context.Entry(item).State = EntityState.Modified;
                 await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!ProveedorExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
+                return item;
+            });
         }
 
+        // POST: api/Proveedores
+        [HttpPost]
+        public async Task<ActionResult<>> Post( item)
+        {
+            return await HandleDbOperation(async () =>
+            {
+                _context.Proveedores.Add(item);
+                await _context.SaveChangesAsync();
+                return item;
+            });
+        }
+
+        // DELETE: api/Proveedores/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteProveedor(int id)
+        public async Task<IActionResult> Delete(int id)
         {
-            var proveedor = await _context.Proveedores.FindAsync(id);
-            if (proveedor == null)
+            return await HandleDbOperation(async () =>
             {
-                return NotFound();
-            }
+                var item = await _context.Proveedores.FindAsync(id);
+                if (item == null)
+                {
+                    return null;
+                }
 
-            _context.Proveedores.Remove(proveedor);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
-
-        private bool ProveedorExists(int id)
-        {
-            return _context.Proveedores.Any(e => e.ProveedorID == id);
+                _context.Proveedores.Remove(item);
+                await _context.SaveChangesAsync();
+                return item;
+            });
         }
     }
 }

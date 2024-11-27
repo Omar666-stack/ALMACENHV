@@ -1,97 +1,98 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using ALMACENHV.Models; // Asegúrate de que este espacio de nombres esté incluido
+using ALMACENHV.Models;
 
 namespace ALMACENHV.Controllers
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public class RegistroEntradasController : ControllerBase
+    public class RegistroEntradasController : BaseController
     {
         private readonly TuDbContext _context;
+        private readonly ILogger<RegistroEntradasController> _logger;
 
-        public RegistroEntradasController(TuDbContext context)
+        public RegistroEntradasController(TuDbContext context, ILogger<RegistroEntradasController> logger)
+            : base(logger)
         {
             _context = context;
+            _logger = logger;
         }
 
+        // GET: api/RegistroEntradas
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<RegistroEntrada>>> GetRegistroEntradas()
+        public async Task<ActionResult<IEnumerable<>>> GetRegistroEntradas()
         {
-            return await _context.RegistroEntradas.ToListAsync();
+            return await HandleDbOperation(async () =>
+            {
+                var items = await _context.RegistroEntradas.ToListAsync();
+                if (!items.Any())
+                {
+                    _logger.LogInformation("No se encontraron registros");
+                    return new List<>();
+                }
+                return items;
+            });
         }
 
+        // GET: api/RegistroEntradas/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<RegistroEntrada>> GetRegistroEntrada(int id)
+        public async Task<ActionResult<>> Get(int id)
         {
-            var registroEntrada = await _context.RegistroEntradas.FindAsync(id);
-
-            if (registroEntrada == null)
+            return await HandleDbOperation(async () =>
             {
-                return NotFound();
-            }
-
-            return registroEntrada;
+                var item = await _context.RegistroEntradas.FindAsync(id);
+                if (item == null)
+                {
+                    _logger.LogWarning("Registro no encontrado: {Id}", id);
+                    return null;
+                }
+                return item;
+            });
         }
 
-        [HttpPost]
-        public async Task<ActionResult<RegistroEntrada>> PostRegistroEntrada(RegistroEntrada registroEntrada)
-        {
-            _context.RegistroEntradas.Add(registroEntrada);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetRegistroEntrada", new { id = registroEntrada.RegistroEntradaID }, registroEntrada);
-        }
-
+        // PUT: api/RegistroEntradas/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutRegistroEntrada(int id, RegistroEntrada registroEntrada)
+        public async Task<IActionResult> Put(int id,  item)
         {
-            if (id != registroEntrada.RegistroEntradaID)
+            if (id != item.ID)
             {
-                return BadRequest();
+                return BadRequest("El ID no coincide con el registro a actualizar");
             }
 
-            _context.Entry(registroEntrada).State = EntityState.Modified;
-
-            try
+            return await HandleDbOperation(async () =>
             {
+                _context.Entry(item).State = EntityState.Modified;
                 await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!RegistroEntradaExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
+                return item;
+            });
         }
 
+        // POST: api/RegistroEntradas
+        [HttpPost]
+        public async Task<ActionResult<>> Post( item)
+        {
+            return await HandleDbOperation(async () =>
+            {
+                _context.RegistroEntradas.Add(item);
+                await _context.SaveChangesAsync();
+                return item;
+            });
+        }
+
+        // DELETE: api/RegistroEntradas/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteRegistroEntrada(int id)
+        public async Task<IActionResult> Delete(int id)
         {
-            var registroEntrada = await _context.RegistroEntradas.FindAsync(id);
-            if (registroEntrada == null)
+            return await HandleDbOperation(async () =>
             {
-                return NotFound();
-            }
+                var item = await _context.RegistroEntradas.FindAsync(id);
+                if (item == null)
+                {
+                    return null;
+                }
 
-            _context.RegistroEntradas.Remove(registroEntrada);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
-
-        private bool RegistroEntradaExists(int id)
-        {
-            return _context.RegistroEntradas.Any(e => e.RegistroEntradaID == id);
+                _context.RegistroEntradas.Remove(item);
+                await _context.SaveChangesAsync();
+                return item;
+            });
         }
     }
 }

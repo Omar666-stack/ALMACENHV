@@ -1,97 +1,98 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using ALMACENHV.Models; // Asegúrate de que este espacio de nombres esté incluido
+using ALMACENHV.Models;
 
 namespace ALMACENHV.Controllers
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public class RolesController : ControllerBase
+    public class RolesController : BaseController
     {
         private readonly TuDbContext _context;
+        private readonly ILogger<RolesController> _logger;
 
-        public RolesController(TuDbContext context)
+        public RolesController(TuDbContext context, ILogger<RolesController> logger)
+            : base(logger)
         {
             _context = context;
+            _logger = logger;
         }
 
+        // GET: api/Roles
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Rol>>> GetRoles()
+        public async Task<ActionResult<IEnumerable<>>> GetRoles()
         {
-            return await _context.Roles.ToListAsync();
+            return await HandleDbOperation(async () =>
+            {
+                var items = await _context.Roles.ToListAsync();
+                if (!items.Any())
+                {
+                    _logger.LogInformation("No se encontraron registros");
+                    return new List<>();
+                }
+                return items;
+            });
         }
 
+        // GET: api/Roles/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Rol>> GetRol(int id)
+        public async Task<ActionResult<>> Get(int id)
         {
-            var rol = await _context.Roles.FindAsync(id);
-
-            if (rol == null)
+            return await HandleDbOperation(async () =>
             {
-                return NotFound();
-            }
-
-            return rol;
+                var item = await _context.Roles.FindAsync(id);
+                if (item == null)
+                {
+                    _logger.LogWarning("Registro no encontrado: {Id}", id);
+                    return null;
+                }
+                return item;
+            });
         }
 
-        [HttpPost]
-        public async Task<ActionResult<Rol>> PostRol(Rol rol)
-        {
-            _context.Roles.Add(rol);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetRol", new { id = rol.RolID }, rol);
-        }
-
+        // PUT: api/Roles/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutRol(int id, Rol rol)
+        public async Task<IActionResult> Put(int id,  item)
         {
-            if (id != rol.RolID)
+            if (id != item.ID)
             {
-                return BadRequest();
+                return BadRequest("El ID no coincide con el registro a actualizar");
             }
 
-            _context.Entry(rol).State = EntityState.Modified;
-
-            try
+            return await HandleDbOperation(async () =>
             {
+                _context.Entry(item).State = EntityState.Modified;
                 await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!RolExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
+                return item;
+            });
         }
 
+        // POST: api/Roles
+        [HttpPost]
+        public async Task<ActionResult<>> Post( item)
+        {
+            return await HandleDbOperation(async () =>
+            {
+                _context.Roles.Add(item);
+                await _context.SaveChangesAsync();
+                return item;
+            });
+        }
+
+        // DELETE: api/Roles/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteRol(int id)
+        public async Task<IActionResult> Delete(int id)
         {
-            var rol = await _context.Roles.FindAsync(id);
-            if (rol == null)
+            return await HandleDbOperation(async () =>
             {
-                return NotFound();
-            }
+                var item = await _context.Roles.FindAsync(id);
+                if (item == null)
+                {
+                    return null;
+                }
 
-            _context.Roles.Remove(rol);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
-
-        private bool RolExists(int id)
-        {
-            return _context.Roles.Any(e => e.RolID == id);
+                _context.Roles.Remove(item);
+                await _context.SaveChangesAsync();
+                return item;
+            });
         }
     }
 }

@@ -1,97 +1,98 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using ALMACENHV.Models; // Asegúrate de que este espacio de nombres esté incluido
+using ALMACENHV.Models;
 
 namespace ALMACENHV.Controllers
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public class EventosController : ControllerBase
+    public class EventosController : BaseController
     {
         private readonly TuDbContext _context;
+        private readonly ILogger<EventosController> _logger;
 
-        public EventosController(TuDbContext context)
+        public EventosController(TuDbContext context, ILogger<EventosController> logger)
+            : base(logger)
         {
             _context = context;
+            _logger = logger;
         }
 
+        // GET: api/Eventos
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Evento>>> GetEventos()
+        public async Task<ActionResult<IEnumerable<>>> GetEventos()
         {
-            return await _context.Eventos.ToListAsync();
+            return await HandleDbOperation(async () =>
+            {
+                var items = await _context.Eventos.ToListAsync();
+                if (!items.Any())
+                {
+                    _logger.LogInformation("No se encontraron registros");
+                    return new List<>();
+                }
+                return items;
+            });
         }
 
+        // GET: api/Eventos/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Evento>> GetEvento(int id)
+        public async Task<ActionResult<>> Get(int id)
         {
-            var evento = await _context.Eventos.FindAsync(id);
-
-            if (evento == null)
+            return await HandleDbOperation(async () =>
             {
-                return NotFound();
-            }
-
-            return evento;
+                var item = await _context.Eventos.FindAsync(id);
+                if (item == null)
+                {
+                    _logger.LogWarning("Registro no encontrado: {Id}", id);
+                    return null;
+                }
+                return item;
+            });
         }
 
-        [HttpPost]
-        public async Task<ActionResult<Evento>> PostEvento(Evento evento)
-        {
-            _context.Eventos.Add(evento);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetEvento", new { id = evento.EventoID }, evento);
-        }
-
+        // PUT: api/Eventos/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutEvento(int id, Evento evento)
+        public async Task<IActionResult> Put(int id,  item)
         {
-            if (id != evento.EventoID)
+            if (id != item.ID)
             {
-                return BadRequest();
+                return BadRequest("El ID no coincide con el registro a actualizar");
             }
 
-            _context.Entry(evento).State = EntityState.Modified;
-
-            try
+            return await HandleDbOperation(async () =>
             {
+                _context.Entry(item).State = EntityState.Modified;
                 await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!EventoExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
+                return item;
+            });
         }
 
+        // POST: api/Eventos
+        [HttpPost]
+        public async Task<ActionResult<>> Post( item)
+        {
+            return await HandleDbOperation(async () =>
+            {
+                _context.Eventos.Add(item);
+                await _context.SaveChangesAsync();
+                return item;
+            });
+        }
+
+        // DELETE: api/Eventos/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteEvento(int id)
+        public async Task<IActionResult> Delete(int id)
         {
-            var evento = await _context.Eventos.FindAsync(id);
-            if (evento == null)
+            return await HandleDbOperation(async () =>
             {
-                return NotFound();
-            }
+                var item = await _context.Eventos.FindAsync(id);
+                if (item == null)
+                {
+                    return null;
+                }
 
-            _context.Eventos.Remove(evento);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
-
-        private bool EventoExists(int id)
-        {
-            return _context.Eventos.Any(e => e.EventoID == id);
+                _context.Eventos.Remove(item);
+                await _context.SaveChangesAsync();
+                return item;
+            });
         }
     }
 }

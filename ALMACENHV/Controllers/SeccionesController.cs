@@ -1,97 +1,98 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using ALMACENHV.Models; // Asegúrate de que este espacio de nombres esté incluido
+using ALMACENHV.Models;
 
 namespace ALMACENHV.Controllers
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public class SeccionesController : ControllerBase
+    public class SeccionesController : BaseController
     {
         private readonly TuDbContext _context;
+        private readonly ILogger<SeccionesController> _logger;
 
-        public SeccionesController(TuDbContext context)
+        public SeccionesController(TuDbContext context, ILogger<SeccionesController> logger)
+            : base(logger)
         {
             _context = context;
+            _logger = logger;
         }
 
+        // GET: api/Secciones
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Seccion>>> GetSecciones()
+        public async Task<ActionResult<IEnumerable<>>> GetSecciones()
         {
-            return await _context.Secciones.ToListAsync();
+            return await HandleDbOperation(async () =>
+            {
+                var items = await _context.Secciones.ToListAsync();
+                if (!items.Any())
+                {
+                    _logger.LogInformation("No se encontraron registros");
+                    return new List<>();
+                }
+                return items;
+            });
         }
 
+        // GET: api/Secciones/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Seccion>> GetSeccion(int id)
+        public async Task<ActionResult<>> Get(int id)
         {
-            var seccion = await _context.Secciones.FindAsync(id);
-
-            if (seccion == null)
+            return await HandleDbOperation(async () =>
             {
-                return NotFound();
-            }
-
-            return seccion;
+                var item = await _context.Secciones.FindAsync(id);
+                if (item == null)
+                {
+                    _logger.LogWarning("Registro no encontrado: {Id}", id);
+                    return null;
+                }
+                return item;
+            });
         }
 
-        [HttpPost]
-        public async Task<ActionResult<Seccion>> PostSeccion(Seccion seccion)
-        {
-            _context.Secciones.Add(seccion);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetSeccion", new { id = seccion.SeccionID }, seccion);
-        }
-
+        // PUT: api/Secciones/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutSeccion(int id, Seccion seccion)
+        public async Task<IActionResult> Put(int id,  item)
         {
-            if (id != seccion.SeccionID)
+            if (id != item.ID)
             {
-                return BadRequest();
+                return BadRequest("El ID no coincide con el registro a actualizar");
             }
 
-            _context.Entry(seccion).State = EntityState.Modified;
-
-            try
+            return await HandleDbOperation(async () =>
             {
+                _context.Entry(item).State = EntityState.Modified;
                 await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!SeccionExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
+                return item;
+            });
         }
 
+        // POST: api/Secciones
+        [HttpPost]
+        public async Task<ActionResult<>> Post( item)
+        {
+            return await HandleDbOperation(async () =>
+            {
+                _context.Secciones.Add(item);
+                await _context.SaveChangesAsync();
+                return item;
+            });
+        }
+
+        // DELETE: api/Secciones/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteSeccion(int id)
+        public async Task<IActionResult> Delete(int id)
         {
-            var seccion = await _context.Secciones.FindAsync(id);
-            if (seccion == null)
+            return await HandleDbOperation(async () =>
             {
-                return NotFound();
-            }
+                var item = await _context.Secciones.FindAsync(id);
+                if (item == null)
+                {
+                    return null;
+                }
 
-            _context.Secciones.Remove(seccion);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
-
-        private bool SeccionExists(int id)
-        {
-            return _context.Secciones.Any(e => e.SeccionID == id);
+                _context.Secciones.Remove(item);
+                await _context.SaveChangesAsync();
+                return item;
+            });
         }
     }
 }
