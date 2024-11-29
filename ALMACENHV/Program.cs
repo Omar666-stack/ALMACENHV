@@ -46,7 +46,7 @@ builder.Services.AddControllers(options =>
 .AddJsonOptions(options =>
 {
     options.JsonSerializerOptions.PropertyNamingPolicy = null;
-    options.JsonSerializerOptions.WriteIndented = builder.Environment.IsDevelopment();
+    options.JsonSerializerOptions.WriteIndented = false; 
 });
 
 // Configurar CORS para Render
@@ -105,14 +105,19 @@ builder.Services.AddCors(options =>
 // Agregar caché distribuida
 builder.Services.AddDistributedMemoryCache();
 
-// Agregar caché en memoria para resultados de consultas
+// Agregar caché en memoria
 builder.Services.AddMemoryCache();
+
+// Agregar caché de respuestas
+builder.Services.AddResponseCaching();
 
 // Configurar compresión de respuesta
 builder.Services.AddResponseCompression(options =>
 {
     options.EnableForHttps = true;
     options.Providers.Add<GzipCompressionProvider>();
+    options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
+        new[] { "application/json" });
 });
 
 // Configurar JWT
@@ -136,13 +141,15 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 // Configure Swagger
-builder.Services.AddSwaggerGen(c =>
+if (builder.Environment.IsDevelopment())
 {
-    c.SwaggerDoc("v1", new OpenApiInfo 
-    { 
-        Title = "ALMACENHV API", 
-        Version = "v1",
-        Description = @"API RESTful para el sistema de gestión de almacén ALMACENHV.
+    builder.Services.AddSwaggerGen(c =>
+    {
+        c.SwaggerDoc("v1", new OpenApiInfo 
+        { 
+            Title = "ALMACENHV API", 
+            Version = "v1",
+            Description = @"API RESTful para el sistema de gestión de almacén ALMACENHV.
         
 Características principales:
 - Gestión completa de productos e inventario
@@ -150,81 +157,82 @@ Características principales:
 - Gestión de proveedores
 - Sistema de autenticación JWT
 - Registro de movimientos y apuntes",
-        Contact = new OpenApiContact
-        {
-            Name = "Omar",
-            Email = "omar@ejemplo.com",
-            Url = new Uri("https://github.com/yourusername")
-        },
-        License = new OpenApiLicense
-        {
-            Name = "MIT License",
-            Url = new Uri("https://opensource.org/licenses/MIT")
-        }
-    });
-
-    // Agregar comentarios XML de documentación
-    var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
-    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-    if (File.Exists(xmlPath))
-    {
-        c.IncludeXmlComments(xmlPath);
-    }
-
-    // Configurar autenticación
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        Description = @"JWT Authorization header using the Bearer scheme. 
-                      Ingrese 'Bearer' [espacio] y luego su token.
-                      Ejemplo: 'Bearer 12345abcdef'",
-        Name = "Authorization",
-        In = ParameterLocation.Header,
-        Type = SecuritySchemeType.ApiKey,
-        Scheme = "Bearer"
-    });
-
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecurityScheme
+            Contact = new OpenApiContact
             {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
+                Name = "Omar",
+                Email = "omar@ejemplo.com",
+                Url = new Uri("https://github.com/yourusername")
             },
-            Array.Empty<string>()
-        }
-    });
+            License = new OpenApiLicense
+            {
+                Name = "MIT License",
+                Url = new Uri("https://opensource.org/licenses/MIT")
+            }
+        });
 
-    // Configurar ejemplos de respuesta
-    c.UseInlineDefinitionsForEnums();
-    
-    // Agrupar endpoints por tag
-    c.TagActionsBy(api =>
-    {
-        if (api.GroupName != null)
+        // Agregar comentarios XML de documentación
+        var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
+        var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+        if (File.Exists(xmlPath))
         {
-            return new[] { api.GroupName };
+            c.IncludeXmlComments(xmlPath);
         }
 
-        if (api.ActionDescriptor is Microsoft.AspNetCore.Mvc.Controllers.ControllerActionDescriptor controllerActionDescriptor)
+        // Configurar autenticación
+        c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
         {
-            return new[] { controllerActionDescriptor.ControllerName };
-        }
+            Description = @"JWT Authorization header using the Bearer scheme. 
+                          Ingrese 'Bearer' [espacio] y luego su token.
+                          Ejemplo: 'Bearer 12345abcdef'",
+            Name = "Authorization",
+            In = ParameterLocation.Header,
+            Type = SecuritySchemeType.ApiKey,
+            Scheme = "Bearer"
+        });
 
-        throw new InvalidOperationException("Unable to determine tag for endpoint.");
+        c.AddSecurityRequirement(new OpenApiSecurityRequirement
+        {
+            {
+                new OpenApiSecurityScheme
+                {
+                    Reference = new OpenApiReference
+                    {
+                        Type = ReferenceType.SecurityScheme,
+                        Id = "Bearer"
+                    }
+                },
+                Array.Empty<string>()
+            }
+        });
+
+        // Configurar ejemplos de respuesta
+        c.UseInlineDefinitionsForEnums();
+        
+        // Agrupar endpoints por tag
+        c.TagActionsBy(api =>
+        {
+            if (api.GroupName != null)
+            {
+                return new[] { api.GroupName };
+            }
+
+            if (api.ActionDescriptor is Microsoft.AspNetCore.Mvc.Controllers.ControllerActionDescriptor controllerActionDescriptor)
+            {
+                return new[] { controllerActionDescriptor.ControllerName };
+            }
+
+            throw new InvalidOperationException("Unable to determine tag for endpoint.");
+        });
+
+        c.DocInclusionPredicate((name, api) => true);
+
+        // Ordenar acciones por nombre de tag
+        c.OrderActionsBy(apiDesc => $"{apiDesc.ActionDescriptor.RouteValues["controller"]}_{apiDesc.RelativePath}");
+
+        // Configurar esquemas personalizados
+        c.SchemaFilter<EnumSchemaFilter>();
     });
-
-    c.DocInclusionPredicate((name, api) => true);
-
-    // Ordenar acciones por nombre de tag
-    c.OrderActionsBy(apiDesc => $"{apiDesc.ActionDescriptor.RouteValues["controller"]}_{apiDesc.RelativePath}");
-
-    // Configurar esquemas personalizados
-    c.SchemaFilter<EnumSchemaFilter>();
-});
+}
 
 // Configurar HttpClient con reintentos
 builder.Services.AddHttpClient("DefaultClient")
@@ -253,25 +261,36 @@ else
 
 app.UseHttpsRedirection();
 app.UseResponseCompression();
+app.UseResponseCaching();
 app.UseErrorHandling(); 
 app.UseCors("AllowRender");
 
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Configurar caché para respuestas estáticas
+app.UseStaticFiles(new StaticFileOptions
+{
+    OnPrepareResponse = ctx =>
+    {
+        ctx.Context.Response.Headers.Append(
+            "Cache-Control", $"public, max-age=2592000");
+    }
+});
+
 // Configurar manejo de excepciones no controladas
 app.Use(async (context, next) =>
 {
     try
-    {
-        await next();
-    }
-    catch (Exception ex)
-    {
-        var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "Error no controlado en la aplicación");
-        throw;
-    }
+{
+    await next();
+}
+catch (Exception ex)
+{
+    var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
+    logger.LogError(ex, "Error no controlado en la aplicación");
+    throw;
+}
 });
 
 app.MapControllers();
