@@ -30,6 +30,9 @@ namespace ALMACENHV.Models
         [Required]
         public int ProveedorID { get; set; }
 
+        [Required]
+        public int ProductoID { get; set; }
+
         [ForeignKey("UsuarioID")]
         public virtual Usuario? Usuario { get; set; }
 
@@ -38,6 +41,9 @@ namespace ALMACENHV.Models
 
         [ForeignKey("ProveedorID")]
         public virtual Proveedor? Proveedor { get; set; }
+
+        [ForeignKey("ProductoID")]
+        public virtual Producto? Producto { get; set; }
 
         public virtual ICollection<RegistroEntradaDetalle> Detalles { get; set; } = new List<RegistroEntradaDetalle>();
     }

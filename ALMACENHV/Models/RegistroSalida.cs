@@ -27,11 +27,17 @@ namespace ALMACENHV.Models
         [Required]
         public int UsuarioID { get; set; }
 
+        [Required]
+        public int ProductoID { get; set; }
+
         [ForeignKey("UbicacionID")]
         public virtual Ubicacion? Ubicacion { get; set; }
 
         [ForeignKey("UsuarioID")]
         public virtual Usuario? Usuario { get; set; }
+
+        [ForeignKey("ProductoID")]
+        public virtual Producto? Producto { get; set; }
 
         public virtual ICollection<RegistroSalidaDetalle> Detalles { get; set; } = new List<RegistroSalidaDetalle>();
     }

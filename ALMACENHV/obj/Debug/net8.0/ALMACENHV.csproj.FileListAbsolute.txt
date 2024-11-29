@@ -325,3 +325,5 @@ c:\Users\Lenovo\source\repos\ALMACENHV\ALMACENHV\ALMACENHV\bin\Debug\net8.0\ALMA
 c:\Users\Lenovo\source\repos\ALMACENHV\ALMACENHV\ALMACENHV\bin\Debug\net8.0\ALMACENHV.xml
 c:\Users\Lenovo\source\repos\ALMACENHV\ALMACENHV\ALMACENHV\obj\Debug\net8.0\ALMACENHV.genruntimeconfig.cache
 c:\Users\Lenovo\source\repos\ALMACENHV\ALMACENHV\ALMACENHV\obj\Debug\net8.0\ref\ALMACENHV.dll
+c:\Users\Lenovo\source\repos\ALMACENHV\ALMACENHV\ALMACENHV\bin\Debug\net8.0\Castle.Core.dll
+c:\Users\Lenovo\source\repos\ALMACENHV\ALMACENHV\ALMACENHV\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.Proxies.dll

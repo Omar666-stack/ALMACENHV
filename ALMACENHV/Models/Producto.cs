@@ -9,6 +9,10 @@ namespace ALMACENHV.Models
         public int ProductoID { get; set; }
 
         [Required]
+        [StringLength(50)]
+        public string Codigo { get; set; }
+
+        [Required]
         [StringLength(100)]
         public string Nombre { get; set; } = string.Empty;
 

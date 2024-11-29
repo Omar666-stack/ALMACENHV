@@ -8,8 +8,8 @@ namespace ALMACENHV.Controllers
 {
     public class BaseController : ControllerBase
     {
-        protected readonly AlmacenContext _context;
-        protected readonly ILogger _logger;
+        protected AlmacenContext _context;
+        protected ILogger _logger;
 
         public BaseController(AlmacenContext context, ILogger logger)
         {
