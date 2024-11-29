@@ -1,98 +1,83 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ALMACENHV.Models;
+using ALMACENHV.Data;
 
 namespace ALMACENHV.Controllers
 {
+    [Route("api/[controller]")]
+    [ApiController]
     public class RegistroIngresoDetallesController : BaseController
     {
-        private readonly TuDbContext _context;
-        private readonly ILogger<RegistroIngresoDetallesController> _logger;
-
-        public RegistroIngresoDetallesController(TuDbContext context, ILogger<RegistroIngresoDetallesController> logger)
-            : base(logger)
+        public RegistroIngresoDetallesController(AlmacenContext context, ILogger<RegistroIngresoDetallesController> logger)
+            : base(context, logger)
         {
-            _context = context;
-            _logger = logger;
         }
 
         // GET: api/RegistroIngresoDetalles
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<>>> GetRegistroIngresoDetalles()
+        public async Task<ActionResult<IEnumerable<RegistroIngresoDetalle>>> GetRegistroIngresoDetalles()
         {
-            return await HandleDbOperation(async () =>
-            {
-                var items = await _context.RegistroIngresoDetalles.ToListAsync();
-                if (!items.Any())
-                {
-                    _logger.LogInformation("No se encontraron registros");
-                    return new List<>();
-                }
-                return items;
-            });
+            return await HandleDbOperationList<RegistroIngresoDetalle>(
+                async () => await _context.RegistroIngresoDetalles
+                    .Include(r => r.RegistroIngreso)
+                    .Include(r => r.Producto)
+                    .ToListAsync(),
+                "Error retrieving registro ingreso detalles");
         }
 
         // GET: api/RegistroIngresoDetalles/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<>> Get(int id)
+        public async Task<ActionResult<RegistroIngresoDetalle>> GetRegistroIngresoDetalle(int id)
         {
-            return await HandleDbOperation(async () =>
-            {
-                var item = await _context.RegistroIngresoDetalles.FindAsync(id);
-                if (item == null)
-                {
-                    _logger.LogWarning("Registro no encontrado: {Id}", id);
-                    return null;
-                }
-                return item;
-            });
+            return await HandleDbOperation<RegistroIngresoDetalle>(
+                async () => await _context.RegistroIngresoDetalles
+                    .Include(r => r.RegistroIngreso)
+                    .Include(r => r.Producto)
+                    .FirstOrDefaultAsync(r => r.RegistroIngresoDetalleID == id),
+                $"Error retrieving registro ingreso detalle with ID {id}");
         }
 
         // PUT: api/RegistroIngresoDetalles/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> Put(int id,  item)
+        public async Task<IActionResult> PutRegistroIngresoDetalle(int id, RegistroIngresoDetalle registroIngresoDetalle)
         {
-            if (id != item.ID)
+            if (id != registroIngresoDetalle.RegistroIngresoDetalleID)
             {
-                return BadRequest("El ID no coincide con el registro a actualizar");
+                return BadRequest();
             }
 
-            return await HandleDbOperation(async () =>
-            {
-                _context.Entry(item).State = EntityState.Modified;
-                await _context.SaveChangesAsync();
-                return item;
-            });
+            _context.Entry(registroIngresoDetalle).State = EntityState.Modified;
+
+            return await HandleDbUpdate<RegistroIngresoDetalle>(
+                registroIngresoDetalle,
+                async () => await _context.SaveChangesAsync(),
+                $"Error updating registro ingreso detalle with ID {id}");
         }
 
         // POST: api/RegistroIngresoDetalles
         [HttpPost]
-        public async Task<ActionResult<>> Post( item)
+        public async Task<ActionResult<RegistroIngresoDetalle>> PostRegistroIngresoDetalle(RegistroIngresoDetalle registroIngresoDetalle)
         {
-            return await HandleDbOperation(async () =>
-            {
-                _context.RegistroIngresoDetalles.Add(item);
-                await _context.SaveChangesAsync();
-                return item;
-            });
+            _context.RegistroIngresoDetalles.Add(registroIngresoDetalle);
+
+            return await HandleDbCreate<RegistroIngresoDetalle>(
+                registroIngresoDetalle,
+                async () => await _context.SaveChangesAsync(),
+                "Error creating registro ingreso detalle");
         }
 
         // DELETE: api/RegistroIngresoDetalles/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> DeleteRegistroIngresoDetalle(int id)
         {
-            return await HandleDbOperation(async () =>
-            {
-                var item = await _context.RegistroIngresoDetalles.FindAsync(id);
-                if (item == null)
-                {
-                    return null;
-                }
-
-                _context.RegistroIngresoDetalles.Remove(item);
-                await _context.SaveChangesAsync();
-                return item;
-            });
+            return await HandleDbDelete<RegistroIngresoDetalle>(
+                async () => await _context.RegistroIngresoDetalles.FindAsync(id),
+                async (detalle) => {
+                    _context.RegistroIngresoDetalles.Remove(detalle);
+                    await _context.SaveChangesAsync();
+                },
+                $"Error deleting registro ingreso detalle with ID {id}");
         }
     }
 }

@@ -1,98 +1,88 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ALMACENHV.Models;
+using ALMACENHV.Data;
 
 namespace ALMACENHV.Controllers
 {
+    [Route("api/[controller]")]
+    [ApiController]
     public class RegistroSalidaDetallesController : BaseController
     {
-        private readonly TuDbContext _context;
-        private readonly ILogger<RegistroSalidaDetallesController> _logger;
-
-        public RegistroSalidaDetallesController(TuDbContext context, ILogger<RegistroSalidaDetallesController> logger)
-            : base(logger)
+        public RegistroSalidaDetallesController(AlmacenContext context, ILogger<RegistroSalidaDetallesController> logger)
+            : base(context, logger)
         {
-            _context = context;
-            _logger = logger;
         }
 
         // GET: api/RegistroSalidaDetalles
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<>>> GetRegistroSalidaDetalles()
+        public async Task<ActionResult<IEnumerable<RegistroSalidaDetalle>>> GetRegistroSalidaDetalles()
         {
-            return await HandleDbOperation(async () =>
-            {
-                var items = await _context.RegistroSalidaDetalles.ToListAsync();
-                if (!items.Any())
-                {
-                    _logger.LogInformation("No se encontraron registros");
-                    return new List<>();
-                }
-                return items;
-            });
+            return await HandleDbOperationList(
+                () => _context.RegistroSalidaDetalles
+                    .Include(r => r.RegistroSalida)
+                    .Include(r => r.Producto)
+                    .ToListAsync()
+            );
         }
 
         // GET: api/RegistroSalidaDetalles/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<>> Get(int id)
+        public async Task<ActionResult<RegistroSalidaDetalle>> GetRegistroSalidaDetalle(int id)
         {
-            return await HandleDbOperation(async () =>
-            {
-                var item = await _context.RegistroSalidaDetalles.FindAsync(id);
-                if (item == null)
-                {
-                    _logger.LogWarning("Registro no encontrado: {Id}", id);
-                    return null;
-                }
-                return item;
-            });
-        }
-
-        // PUT: api/RegistroSalidaDetalles/5
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Put(int id,  item)
-        {
-            if (id != item.ID)
-            {
-                return BadRequest("El ID no coincide con el registro a actualizar");
-            }
-
-            return await HandleDbOperation(async () =>
-            {
-                _context.Entry(item).State = EntityState.Modified;
-                await _context.SaveChangesAsync();
-                return item;
-            });
+            return await HandleDbOperation(
+                () => _context.RegistroSalidaDetalles
+                    .Include(r => r.RegistroSalida)
+                    .Include(r => r.Producto)
+                    .FirstOrDefaultAsync(r => r.Id == id)
+            );
         }
 
         // POST: api/RegistroSalidaDetalles
         [HttpPost]
-        public async Task<ActionResult<>> Post( item)
+        public async Task<ActionResult<RegistroSalidaDetalle>> PostRegistroSalidaDetalle(RegistroSalidaDetalle registroSalidaDetalle)
         {
-            return await HandleDbOperation(async () =>
+            return await HandleDbCreate(
+                registroSalidaDetalle,
+                async () => {
+                    await _context.RegistroSalidaDetalles.AddAsync(registroSalidaDetalle);
+                    await _context.SaveChangesAsync();
+                },
+                "Crear detalle de salida"
+            );
+        }
+
+        // PUT: api/RegistroSalidaDetalles/5
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutRegistroSalidaDetalle(int id, RegistroSalidaDetalle registroSalidaDetalle)
+        {
+            if (id != registroSalidaDetalle.Id)
             {
-                _context.RegistroSalidaDetalles.Add(item);
-                await _context.SaveChangesAsync();
-                return item;
-            });
+                return BadRequest();
+            }
+
+            return await HandleDbUpdate(
+                registroSalidaDetalle,
+                async () => {
+                    _context.Entry(registroSalidaDetalle).State = EntityState.Modified;
+                    await _context.SaveChangesAsync();
+                },
+                "Actualizar detalle de salida"
+            );
         }
 
         // DELETE: api/RegistroSalidaDetalles/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> DeleteRegistroSalidaDetalle(int id)
         {
-            return await HandleDbOperation(async () =>
-            {
-                var item = await _context.RegistroSalidaDetalles.FindAsync(id);
-                if (item == null)
-                {
-                    return null;
-                }
-
-                _context.RegistroSalidaDetalles.Remove(item);
-                await _context.SaveChangesAsync();
-                return item;
-            });
+            return await HandleDbDelete<RegistroSalidaDetalle>(
+                async () => await _context.RegistroSalidaDetalles.FindAsync(id),
+                async (detalle) => {
+                    _context.RegistroSalidaDetalles.Remove(detalle);
+                    await _context.SaveChangesAsync();
+                },
+                "Eliminar detalle de salida"
+            );
         }
     }
 }

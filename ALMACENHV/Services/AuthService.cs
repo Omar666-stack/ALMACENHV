@@ -1,6 +1,5 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Security.Cryptography;
 using System.Text;
 using ALMACENHV.Models;
 using Microsoft.IdentityModel.Tokens;
@@ -10,53 +9,49 @@ namespace ALMACENHV.Services
     public interface IAuthService
     {
         string GenerateJwtToken(Usuario usuario);
-        string HashPassword(string password);
-        bool VerifyPassword(string password, string hashedPassword);
     }
 
     public class AuthService : IAuthService
     {
         private readonly IConfiguration _configuration;
+        private readonly ILogger<AuthService> _logger;
 
-        public AuthService(IConfiguration configuration)
+        public AuthService(IConfiguration configuration, ILogger<AuthService> logger)
         {
             _configuration = configuration;
+            _logger = logger;
         }
 
         public string GenerateJwtToken(Usuario usuario)
         {
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(_configuration["Jwt:Key"] ?? "tu_clave_secreta_muy_larga_y_segura_2024");
-            
-            var tokenDescriptor = new SecurityTokenDescriptor
+            try
             {
-                Subject = new ClaimsIdentity(new[]
+                var claims = new List<Claim>
                 {
                     new Claim(ClaimTypes.NameIdentifier, usuario.UsuarioID.ToString()),
-                    new Claim(ClaimTypes.Name, usuario.NombreUsuario),
-                    new Claim(ClaimTypes.Role, usuario.RolID.ToString())
-                }),
-                Expires = DateTime.UtcNow.AddDays(7),
-                SigningCredentials = new SigningCredentials(
-                    new SymmetricSecurityKey(key),
-                    SecurityAlgorithms.HmacSha256Signature)
-            };
+                    new Claim(ClaimTypes.Name, usuario.Nombre),
+                    new Claim(ClaimTypes.Email, usuario.Email),
+                    new Claim(ClaimTypes.Role, usuario.Rol?.Nombre ?? "Usuario")
+                };
 
-            var token = tokenHandler.CreateToken(tokenDescriptor);
-            return tokenHandler.WriteToken(token);
-        }
+                var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
+                    _configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key not found in configuration")));
+                var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-        public string HashPassword(string password)
-        {
-            using var sha256 = SHA256.Create();
-            var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
-            return Convert.ToBase64String(hashedBytes);
-        }
+                var token = new JwtSecurityToken(
+                    issuer: _configuration["Jwt:Issuer"],
+                    audience: _configuration["Jwt:Audience"],
+                    claims: claims,
+                    expires: DateTime.Now.AddHours(24),
+                    signingCredentials: creds);
 
-        public bool VerifyPassword(string password, string hashedPassword)
-        {
-            var hashedInputPassword = HashPassword(password);
-            return hashedInputPassword == hashedPassword;
+                return new JwtSecurityTokenHandler().WriteToken(token);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error generando el token JWT");
+                throw;
+            }
         }
     }
 }

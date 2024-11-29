@@ -1,98 +1,89 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ALMACENHV.Models;
+using ALMACENHV.Data;
 
 namespace ALMACENHV.Controllers
 {
+    [Route("api/[controller]")]
+    [ApiController]
     public class RolesController : BaseController
     {
-        private readonly TuDbContext _context;
-        private readonly ILogger<RolesController> _logger;
-
-        public RolesController(TuDbContext context, ILogger<RolesController> logger)
-            : base(logger)
+        public RolesController(AlmacenContext context, ILogger<RolesController> logger)
+            : base(context, logger)
         {
-            _context = context;
-            _logger = logger;
         }
 
         // GET: api/Roles
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<>>> GetRoles()
+        public async Task<ActionResult<IEnumerable<Rol>>> GetRoles()
         {
-            return await HandleDbOperation(async () =>
-            {
-                var items = await _context.Roles.ToListAsync();
-                if (!items.Any())
-                {
-                    _logger.LogInformation("No se encontraron registros");
-                    return new List<>();
-                }
-                return items;
-            });
+            return await HandleDbOperationList<Rol>(
+                async () => await _context.Roles
+                    .Include(r => r.Usuarios)
+                    .ToListAsync(),
+                "Error retrieving roles"
+            );
         }
 
         // GET: api/Roles/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<>> Get(int id)
+        public async Task<ActionResult<Rol>> GetRol(int id)
         {
-            return await HandleDbOperation(async () =>
-            {
-                var item = await _context.Roles.FindAsync(id);
-                if (item == null)
-                {
-                    _logger.LogWarning("Registro no encontrado: {Id}", id);
-                    return null;
-                }
-                return item;
-            });
+            return await HandleDbOperation<Rol>(
+                async () => await _context.Roles
+                    .Include(r => r.Usuarios)
+                    .FirstOrDefaultAsync(r => r.RolID == id),
+                $"Error retrieving rol with ID {id}"
+            );
         }
 
         // PUT: api/Roles/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> Put(int id,  item)
+        public async Task<IActionResult> PutRol(int id, Rol rol)
         {
-            if (id != item.ID)
+            if (id != rol.RolID)
             {
-                return BadRequest("El ID no coincide con el registro a actualizar");
+                return BadRequest();
             }
 
-            return await HandleDbOperation(async () =>
-            {
-                _context.Entry(item).State = EntityState.Modified;
-                await _context.SaveChangesAsync();
-                return item;
-            });
+            _context.Entry(rol).State = EntityState.Modified;
+
+            return await HandleDbUpdate<Rol>(
+                rol,
+                async () => await _context.SaveChangesAsync(),
+                $"Error updating rol with ID {id}"
+            );
         }
 
         // POST: api/Roles
         [HttpPost]
-        public async Task<ActionResult<>> Post( item)
+        public async Task<ActionResult<Rol>> PostRol(Rol rol)
         {
-            return await HandleDbOperation(async () =>
-            {
-                _context.Roles.Add(item);
-                await _context.SaveChangesAsync();
-                return item;
-            });
+            return await HandleDbCreate<Rol>(
+                rol,
+                async () =>
+                {
+                    _context.Roles.Add(rol);
+                    await _context.SaveChangesAsync();
+                },
+                "Error creating rol"
+            );
         }
 
         // DELETE: api/Roles/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> DeleteRol(int id)
         {
-            return await HandleDbOperation(async () =>
-            {
-                var item = await _context.Roles.FindAsync(id);
-                if (item == null)
+            return await HandleDbDelete<Rol>(
+                async () => await _context.Roles.FindAsync(id),
+                async (rol) =>
                 {
-                    return null;
-                }
-
-                _context.Roles.Remove(item);
-                await _context.SaveChangesAsync();
-                return item;
-            });
+                    _context.Roles.Remove(rol);
+                    await _context.SaveChangesAsync();
+                },
+                $"Error deleting rol with ID {id}"
+            );
         }
     }
 }

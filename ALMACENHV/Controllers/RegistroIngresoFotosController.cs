@@ -1,98 +1,86 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ALMACENHV.Models;
+using ALMACENHV.Data;
 
 namespace ALMACENHV.Controllers
 {
+    [Route("api/[controller]")]
+    [ApiController]
     public class RegistroIngresoFotosController : BaseController
     {
-        private readonly TuDbContext _context;
-        private readonly ILogger<RegistroIngresoFotosController> _logger;
-
-        public RegistroIngresoFotosController(TuDbContext context, ILogger<RegistroIngresoFotosController> logger)
-            : base(logger)
+        public RegistroIngresoFotosController(AlmacenContext context, ILogger<RegistroIngresoFotosController> logger)
+            : base(context, logger)
         {
-            _context = context;
-            _logger = logger;
         }
 
         // GET: api/RegistroIngresoFotos
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<>>> GetRegistroIngresoFotos()
+        public async Task<ActionResult<IEnumerable<RegistroIngresoFoto>>> GetRegistroIngresoFotos()
         {
-            return await HandleDbOperation(async () =>
-            {
-                var items = await _context.RegistroIngresoFotos.ToListAsync();
-                if (!items.Any())
-                {
-                    _logger.LogInformation("No se encontraron registros");
-                    return new List<>();
-                }
-                return items;
-            });
+            return await HandleDbOperationList(
+                () => _context.RegistroIngresoFotos
+                    .Include(r => r.RegistroIngreso)
+                    .ToListAsync()
+            );
         }
 
         // GET: api/RegistroIngresoFotos/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<>> Get(int id)
+        public async Task<ActionResult<RegistroIngresoFoto>> GetRegistroIngresoFoto(int id)
         {
-            return await HandleDbOperation(async () =>
-            {
-                var item = await _context.RegistroIngresoFotos.FindAsync(id);
-                if (item == null)
-                {
-                    _logger.LogWarning("Registro no encontrado: {Id}", id);
-                    return null;
-                }
-                return item;
-            });
-        }
-
-        // PUT: api/RegistroIngresoFotos/5
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Put(int id,  item)
-        {
-            if (id != item.ID)
-            {
-                return BadRequest("El ID no coincide con el registro a actualizar");
-            }
-
-            return await HandleDbOperation(async () =>
-            {
-                _context.Entry(item).State = EntityState.Modified;
-                await _context.SaveChangesAsync();
-                return item;
-            });
+            return await HandleDbOperation(
+                () => _context.RegistroIngresoFotos
+                    .Include(r => r.RegistroIngreso)
+                    .FirstOrDefaultAsync(r => r.Id == id)
+            );
         }
 
         // POST: api/RegistroIngresoFotos
         [HttpPost]
-        public async Task<ActionResult<>> Post( item)
+        public async Task<ActionResult<RegistroIngresoFoto>> PostRegistroIngresoFoto(RegistroIngresoFoto registroIngresoFoto)
         {
-            return await HandleDbOperation(async () =>
+            return await HandleDbCreate(
+                registroIngresoFoto,
+                async () => {
+                    await _context.RegistroIngresoFotos.AddAsync(registroIngresoFoto);
+                    await _context.SaveChangesAsync();
+                },
+                "Crear foto de ingreso"
+            );
+        }
+
+        // PUT: api/RegistroIngresoFotos/5
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutRegistroIngresoFoto(int id, RegistroIngresoFoto registroIngresoFoto)
+        {
+            if (id != registroIngresoFoto.Id)
             {
-                _context.RegistroIngresoFotos.Add(item);
-                await _context.SaveChangesAsync();
-                return item;
-            });
+                return BadRequest();
+            }
+
+            return await HandleDbUpdate(
+                registroIngresoFoto,
+                async () => {
+                    _context.Entry(registroIngresoFoto).State = EntityState.Modified;
+                    await _context.SaveChangesAsync();
+                },
+                "Actualizar foto de ingreso"
+            );
         }
 
         // DELETE: api/RegistroIngresoFotos/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> DeleteRegistroIngresoFoto(int id)
         {
-            return await HandleDbOperation(async () =>
-            {
-                var item = await _context.RegistroIngresoFotos.FindAsync(id);
-                if (item == null)
-                {
-                    return null;
-                }
-
-                _context.RegistroIngresoFotos.Remove(item);
-                await _context.SaveChangesAsync();
-                return item;
-            });
+            return await HandleDbDelete<RegistroIngresoFoto>(
+                async () => await _context.RegistroIngresoFotos.FindAsync(id),
+                async (foto) => {
+                    _context.RegistroIngresoFotos.Remove(foto);
+                    await _context.SaveChangesAsync();
+                },
+                "Eliminar foto de ingreso"
+            );
         }
     }
 }

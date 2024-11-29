@@ -1,16 +1,19 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ALMACENHV.Models;
+using ALMACENHV.Data;
 
 namespace ALMACENHV.Controllers
 {
+    [ApiController]
+    [Route("api/[controller]")]
     public class EventosController : BaseController
     {
-        private readonly TuDbContext _context;
-        private readonly ILogger<EventosController> _logger;
+        private new readonly AlmacenContext _context;
+        private new readonly ILogger<EventosController> _logger;
 
-        public EventosController(TuDbContext context, ILogger<EventosController> logger)
-            : base(logger)
+        public EventosController(AlmacenContext context, ILogger<EventosController> logger)
+            : base(context, logger)
         {
             _context = context;
             _logger = logger;
@@ -18,81 +21,74 @@ namespace ALMACENHV.Controllers
 
         // GET: api/Eventos
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<>>> GetEventos()
+        public async Task<ActionResult<IEnumerable<Evento>>> GetEventos()
         {
-            return await HandleDbOperation(async () =>
-            {
-                var items = await _context.Eventos.ToListAsync();
-                if (!items.Any())
-                {
-                    _logger.LogInformation("No se encontraron registros");
-                    return new List<>();
-                }
-                return items;
-            });
+            return await HandleDbOperationList<Evento>(
+                async () => await _context.Eventos
+                    .Include(e => e.Usuario)
+                    .ToListAsync(),
+                "Error retrieving eventos"
+            );
         }
 
         // GET: api/Eventos/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<>> Get(int id)
+        public async Task<ActionResult<Evento>> GetEvento(int id)
         {
-            return await HandleDbOperation(async () =>
-            {
-                var item = await _context.Eventos.FindAsync(id);
-                if (item == null)
-                {
-                    _logger.LogWarning("Registro no encontrado: {Id}", id);
-                    return null;
-                }
-                return item;
-            });
+            return await HandleDbOperation<Evento>(
+                async () => await _context.Eventos
+                    .Include(e => e.Usuario)
+                    .FirstOrDefaultAsync(e => e.EventoID == id),
+                $"Error retrieving evento with ID {id}"
+            );
         }
 
         // PUT: api/Eventos/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> Put(int id,  item)
+        public async Task<IActionResult> PutEvento(int id, Evento evento)
         {
-            if (id != item.ID)
+            if (id != evento.EventoID)
             {
-                return BadRequest("El ID no coincide con el registro a actualizar");
+                return BadRequest();
             }
 
-            return await HandleDbOperation(async () =>
-            {
-                _context.Entry(item).State = EntityState.Modified;
-                await _context.SaveChangesAsync();
-                return item;
-            });
+            _context.Entry(evento).State = EntityState.Modified;
+
+            return await HandleDbUpdate<Evento>(
+                evento,
+                async () => await _context.SaveChangesAsync(),
+                $"Error updating evento with ID {id}"
+            );
         }
 
         // POST: api/Eventos
         [HttpPost]
-        public async Task<ActionResult<>> Post( item)
+        public async Task<ActionResult<Evento>> PostEvento(Evento evento)
         {
-            return await HandleDbOperation(async () =>
-            {
-                _context.Eventos.Add(item);
-                await _context.SaveChangesAsync();
-                return item;
-            });
+            return await HandleDbCreate<Evento>(
+                evento,
+                async () =>
+                {
+                    _context.Eventos.Add(evento);
+                    await _context.SaveChangesAsync();
+                },
+                "Error creating evento"
+            );
         }
 
         // DELETE: api/Eventos/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> DeleteEvento(int id)
         {
-            return await HandleDbOperation(async () =>
-            {
-                var item = await _context.Eventos.FindAsync(id);
-                if (item == null)
+            return await HandleDbDelete<Evento>(
+                async () => await _context.Eventos.FindAsync(id),
+                async (evento) =>
                 {
-                    return null;
-                }
-
-                _context.Eventos.Remove(item);
-                await _context.SaveChangesAsync();
-                return item;
-            });
+                    _context.Eventos.Remove(evento);
+                    await _context.SaveChangesAsync();
+                },
+                $"Error deleting evento with ID {id}"
+            );
         }
     }
 }

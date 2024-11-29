@@ -1,98 +1,79 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ALMACENHV.Models;
+using ALMACENHV.Data;
 
 namespace ALMACENHV.Controllers
 {
+    [Route("api/[controller]")]
+    [ApiController]
     public class ApuntesController : BaseController
     {
-        private readonly TuDbContext _context;
-        private readonly ILogger<ApuntesController> _logger;
-
-        public ApuntesController(TuDbContext context, ILogger<ApuntesController> logger)
-            : base(logger)
+        public ApuntesController(AlmacenContext context, ILogger<ApuntesController> logger)
+            : base(context, logger)
         {
-            _context = context;
-            _logger = logger;
         }
 
         // GET: api/Apuntes
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<>>> GetApuntes()
+        public async Task<ActionResult<IEnumerable<Apunte>>> GetApuntes()
         {
-            return await HandleDbOperation(async () =>
-            {
-                var items = await _context.Apuntes.ToListAsync();
-                if (!items.Any())
-                {
-                    _logger.LogInformation("No se encontraron registros");
-                    return new List<>();
-                }
-                return items;
-            });
+            return await HandleDbOperationList<Apunte>(
+                async () => await _context.Apuntes.Include(a => a.Usuario).ToListAsync(),
+                "Error retrieving apuntes");
         }
 
         // GET: api/Apuntes/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<>> Get(int id)
+        public async Task<ActionResult<Apunte>> GetApunte(int id)
         {
-            return await HandleDbOperation(async () =>
-            {
-                var item = await _context.Apuntes.FindAsync(id);
-                if (item == null)
-                {
-                    _logger.LogWarning("Registro no encontrado: {Id}", id);
-                    return null;
-                }
-                return item;
-            });
+            return await HandleDbOperation<Apunte>(
+                async () => await _context.Apuntes
+                    .Include(a => a.Usuario)
+                    .FirstOrDefaultAsync(a => a.ApunteID == id),
+                $"Error retrieving apunte with ID {id}");
         }
 
         // PUT: api/Apuntes/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> Put(int id,  item)
+        public async Task<IActionResult> PutApunte(int id, Apunte apunte)
         {
-            if (id != item.ID)
+            if (id != apunte.ApunteID)
             {
-                return BadRequest("El ID no coincide con el registro a actualizar");
+                return BadRequest();
             }
 
-            return await HandleDbOperation(async () =>
-            {
-                _context.Entry(item).State = EntityState.Modified;
-                await _context.SaveChangesAsync();
-                return item;
-            });
+            _context.Entry(apunte).State = EntityState.Modified;
+
+            return await HandleDbUpdate<Apunte>(
+                apunte,
+                async () => await _context.SaveChangesAsync(),
+                $"Error updating apunte with ID {id}");
         }
 
         // POST: api/Apuntes
         [HttpPost]
-        public async Task<ActionResult<>> Post( item)
+        public async Task<ActionResult<Apunte>> PostApunte(Apunte apunte)
         {
-            return await HandleDbOperation(async () =>
-            {
-                _context.Apuntes.Add(item);
-                await _context.SaveChangesAsync();
-                return item;
-            });
+            _context.Apuntes.Add(apunte);
+            
+            return await HandleDbCreate<Apunte>(
+                apunte,
+                async () => await _context.SaveChangesAsync(),
+                "Error creating apunte");
         }
 
         // DELETE: api/Apuntes/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> DeleteApunte(int id)
         {
-            return await HandleDbOperation(async () =>
-            {
-                var item = await _context.Apuntes.FindAsync(id);
-                if (item == null)
-                {
-                    return null;
-                }
-
-                _context.Apuntes.Remove(item);
-                await _context.SaveChangesAsync();
-                return item;
-            });
+            return await HandleDbDelete<Apunte>(
+                async () => await _context.Apuntes.FindAsync(id),
+                async (apunte) => {
+                    _context.Apuntes.Remove(apunte);
+                    await _context.SaveChangesAsync();
+                },
+                $"Error deleting apunte with ID {id}");
         }
     }
 }

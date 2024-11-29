@@ -1,16 +1,19 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ALMACENHV.Models;
+using ALMACENHV.Data;
 
 namespace ALMACENHV.Controllers
 {
+    [ApiController]
+    [Route("api/[controller]")]
     public class UsuariosController : BaseController
     {
-        private readonly TuDbContext _context;
-        private readonly ILogger<UsuariosController> _logger;
+        private new readonly AlmacenContext _context;
+        private new readonly ILogger<UsuariosController> _logger;
 
-        public UsuariosController(TuDbContext context, ILogger<UsuariosController> logger)
-            : base(logger)
+        public UsuariosController(AlmacenContext context, ILogger<UsuariosController> logger)
+            : base(context, logger)
         {
             _context = context;
             _logger = logger;
@@ -18,81 +21,78 @@ namespace ALMACENHV.Controllers
 
         // GET: api/Usuarios
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<>>> GetUsuarios()
+        public async Task<ActionResult<IEnumerable<Usuario>>> GetUsuarios()
         {
-            return await HandleDbOperation(async () =>
-            {
-                var items = await _context.Usuarios.ToListAsync();
-                if (!items.Any())
-                {
-                    _logger.LogInformation("No se encontraron registros");
-                    return new List<>();
-                }
-                return items;
-            });
+            return await HandleDbOperationList<Usuario>(
+                async () => await _context.Usuarios
+                    .Include(u => u.Cargo)
+                    .Include(u => u.Rol)
+                    .Include(u => u.RegistroIngresos)
+                    .ToListAsync(),
+                "Error retrieving usuarios"
+            );
         }
 
         // GET: api/Usuarios/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<>> Get(int id)
+        public async Task<ActionResult<Usuario>> GetUsuario(int id)
         {
-            return await HandleDbOperation(async () =>
-            {
-                var item = await _context.Usuarios.FindAsync(id);
-                if (item == null)
-                {
-                    _logger.LogWarning("Registro no encontrado: {Id}", id);
-                    return null;
-                }
-                return item;
-            });
+            return await HandleDbOperation<Usuario>(
+                async () => await _context.Usuarios
+                    .Include(u => u.Cargo)
+                    .Include(u => u.Rol)
+                    .Include(u => u.RegistroIngresos)
+                    .FirstOrDefaultAsync(u => u.UsuarioID == id),
+                $"Error retrieving usuario with ID {id}"
+            );
         }
 
         // PUT: api/Usuarios/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> Put(int id,  item)
+        public async Task<IActionResult> PutUsuario(int id, Usuario usuario)
         {
-            if (id != item.ID)
+            if (id != usuario.UsuarioID)
             {
-                return BadRequest("El ID no coincide con el registro a actualizar");
+                return BadRequest();
             }
 
-            return await HandleDbOperation(async () =>
-            {
-                _context.Entry(item).State = EntityState.Modified;
-                await _context.SaveChangesAsync();
-                return item;
-            });
+            _context.Entry(usuario).State = EntityState.Modified;
+
+            return await HandleDbUpdate<Usuario>(
+                usuario,
+                async () => await _context.SaveChangesAsync(),
+                $"Error updating usuario with ID {id}"
+            );
         }
 
         // POST: api/Usuarios
         [HttpPost]
-        public async Task<ActionResult<>> Post( item)
+        public async Task<ActionResult<Usuario>> PostUsuario(Usuario usuario)
         {
-            return await HandleDbOperation(async () =>
-            {
-                _context.Usuarios.Add(item);
-                await _context.SaveChangesAsync();
-                return item;
-            });
+            return await HandleDbCreate<Usuario>(
+                usuario,
+                async () =>
+                {
+                    _context.Usuarios.Add(usuario);
+                    await _context.SaveChangesAsync();
+                },
+                "Error creating usuario"
+            );
         }
 
         // DELETE: api/Usuarios/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> DeleteUsuario(int id)
         {
-            return await HandleDbOperation(async () =>
-            {
-                var item = await _context.Usuarios.FindAsync(id);
-                if (item == null)
+            return await HandleDbDelete<Usuario>(
+                async () => await _context.Usuarios.FindAsync(id),
+                async (usuario) =>
                 {
-                    return null;
-                }
-
-                _context.Usuarios.Remove(item);
-                await _context.SaveChangesAsync();
-                return item;
-            });
+                    _context.Usuarios.Remove(usuario);
+                    await _context.SaveChangesAsync();
+                },
+                $"Error deleting usuario with ID {id}"
+            );
         }
     }
 }

@@ -1,98 +1,89 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ALMACENHV.Models;
+using ALMACENHV.Data;
 
 namespace ALMACENHV.Controllers
 {
+    [Route("api/[controller]")]
+    [ApiController]
     public class ProductosController : BaseController
     {
-        private readonly TuDbContext _context;
-        private readonly ILogger<ProductosController> _logger;
-
-        public ProductosController(TuDbContext context, ILogger<ProductosController> logger)
-            : base(logger)
+        public ProductosController(AlmacenContext context, ILogger<ProductosController> logger)
+            : base(context, logger)
         {
-            _context = context;
-            _logger = logger;
         }
 
         // GET: api/Productos
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<>>> GetProductos()
+        public async Task<ActionResult<IEnumerable<Producto>>> GetProductos()
         {
-            return await HandleDbOperation(async () =>
-            {
-                var items = await _context.Productos.ToListAsync();
-                if (!items.Any())
-                {
-                    _logger.LogInformation("No se encontraron registros");
-                    return new List<>();
-                }
-                return items;
-            });
+            return await HandleDbOperationList<Producto>(
+                async () => await _context.Productos
+                    .Include(p => p.Seccion)
+                    .ToListAsync(),
+                "Error retrieving productos"
+            );
         }
 
         // GET: api/Productos/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<>> Get(int id)
+        public async Task<ActionResult<Producto>> GetProducto(int id)
         {
-            return await HandleDbOperation(async () =>
-            {
-                var item = await _context.Productos.FindAsync(id);
-                if (item == null)
-                {
-                    _logger.LogWarning("Registro no encontrado: {Id}", id);
-                    return null;
-                }
-                return item;
-            });
+            return await HandleDbOperation<Producto>(
+                async () => await _context.Productos
+                    .Include(p => p.Seccion)
+                    .FirstOrDefaultAsync(p => p.ProductoID == id),
+                $"Error retrieving producto with ID {id}"
+            );
         }
 
         // PUT: api/Productos/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> Put(int id,  item)
+        public async Task<IActionResult> PutProducto(int id, Producto producto)
         {
-            if (id != item.ID)
+            if (id != producto.ProductoID)
             {
-                return BadRequest("El ID no coincide con el registro a actualizar");
+                return BadRequest();
             }
 
-            return await HandleDbOperation(async () =>
-            {
-                _context.Entry(item).State = EntityState.Modified;
-                await _context.SaveChangesAsync();
-                return item;
-            });
+            _context.Entry(producto).State = EntityState.Modified;
+
+            return await HandleDbUpdate<Producto>(
+                producto,
+                async () => await _context.SaveChangesAsync(),
+                $"Error updating producto with ID {id}"
+            );
         }
 
         // POST: api/Productos
         [HttpPost]
-        public async Task<ActionResult<>> Post( item)
+        public async Task<ActionResult<Producto>> PostProducto(Producto producto)
         {
-            return await HandleDbOperation(async () =>
-            {
-                _context.Productos.Add(item);
-                await _context.SaveChangesAsync();
-                return item;
-            });
+            return await HandleDbCreate<Producto>(
+                producto,
+                async () =>
+                {
+                    _context.Productos.Add(producto);
+                    await _context.SaveChangesAsync();
+                },
+                "Error creating producto"
+            );
         }
 
         // DELETE: api/Productos/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> DeleteProducto(int id)
         {
-            return await HandleDbOperation(async () =>
-            {
-                var item = await _context.Productos.FindAsync(id);
-                if (item == null)
+            return await HandleDbDelete<Producto>(
+                async () => await _context.Productos.FindAsync(id),
+                async (producto) =>
                 {
-                    return null;
-                }
-
-                _context.Productos.Remove(item);
-                await _context.SaveChangesAsync();
-                return item;
-            });
+                    _context.Productos.Remove(producto);
+                    await _context.SaveChangesAsync();
+                },
+                $"Error deleting producto with ID {id}"
+            );
         }
     }
 }

@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>ALMACENHV</name>
+    </assembly>
+    <members>
+        <member name="T:ALMACENHV.Migrations.CapturePendingChanges">
+            <inheritdoc />
+        </member>
+        <member name="M:ALMACENHV.Migrations.CapturePendingChanges.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:ALMACENHV.Migrations.CapturePendingChanges.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:ALMACENHV.Migrations.CapturePendingChanges.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+    </members>
+</doc>

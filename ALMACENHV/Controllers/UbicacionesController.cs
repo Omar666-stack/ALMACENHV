@@ -1,98 +1,141 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ALMACENHV.Models;
+using ALMACENHV.Data;
 
 namespace ALMACENHV.Controllers
 {
+    [Route("api/[controller]")]
+    [ApiController]
     public class UbicacionesController : BaseController
     {
-        private readonly TuDbContext _context;
-        private readonly ILogger<UbicacionesController> _logger;
-
-        public UbicacionesController(TuDbContext context, ILogger<UbicacionesController> logger)
-            : base(logger)
+        public UbicacionesController(AlmacenContext context, ILogger<UbicacionesController> logger)
+            : base(context, logger)
         {
-            _context = context;
-            _logger = logger;
         }
 
         // GET: api/Ubicaciones
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<>>> GetUbicaciones()
+        public async Task<ActionResult<IEnumerable<Ubicacion>>> GetUbicaciones()
         {
-            return await HandleDbOperation(async () =>
+            var result = await HandleDbOperationList<Ubicacion>(
+                async () => await _context.Ubicaciones
+                    .Include(u => u.Seccion)
+                    .Include(u => u.RegistroEntradas)
+                    .Include(u => u.RegistroSalidas)
+                    .ToListAsync(),
+                "Error retrieving ubicaciones"
+            );
+
+            if (result.Result is ObjectResult objResult && objResult.Value is List<Ubicacion> ubicaciones)
             {
-                var items = await _context.Ubicaciones.ToListAsync();
-                if (!items.Any())
-                {
-                    _logger.LogInformation("No se encontraron registros");
-                    return new List<>();
-                }
-                return items;
-            });
+                return Ok(ubicaciones.AsEnumerable());
+            }
+
+            return result;
         }
 
         // GET: api/Ubicaciones/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<>> Get(int id)
+        public async Task<ActionResult<Ubicacion>> GetUbicacion(int id)
         {
-            return await HandleDbOperation(async () =>
-            {
-                var item = await _context.Ubicaciones.FindAsync(id);
-                if (item == null)
-                {
-                    _logger.LogWarning("Registro no encontrado: {Id}", id);
-                    return null;
-                }
-                return item;
-            });
+            return await HandleDbOperation<Ubicacion>(
+                async () => await _context.Ubicaciones
+                    .Include(u => u.Seccion)
+                    .Include(u => u.RegistroEntradas)
+                    .Include(u => u.RegistroSalidas)
+                    .FirstOrDefaultAsync(u => u.UbicacionID == id),
+                $"Error retrieving ubicacion with ID {id}"
+            );
         }
 
         // PUT: api/Ubicaciones/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> Put(int id,  item)
+        public async Task<IActionResult> PutUbicacion(int id, Ubicacion ubicacion)
         {
-            if (id != item.ID)
+            if (id != ubicacion.UbicacionID)
             {
-                return BadRequest("El ID no coincide con el registro a actualizar");
+                return BadRequest("El ID de la ubicación no coincide");
             }
 
-            return await HandleDbOperation(async () =>
+            if (!ModelState.IsValid)
             {
-                _context.Entry(item).State = EntityState.Modified;
-                await _context.SaveChangesAsync();
-                return item;
-            });
+                return BadRequest(ModelState);
+            }
+
+            // Validar que la sección existe
+            var seccionExiste = await _context.Secciones.AnyAsync(s => s.SeccionID == ubicacion.SeccionID);
+            if (!seccionExiste)
+            {
+                return BadRequest("La sección especificada no existe");
+            }
+
+            // Validar que el código no esté duplicado (excluyendo la ubicación actual)
+            var codigoExiste = await _context.Ubicaciones
+                .AnyAsync(u => u.Codigo == ubicacion.Codigo && u.UbicacionID != id);
+            if (codigoExiste)
+            {
+                return BadRequest("Ya existe otra ubicación con este código");
+            }
+
+            return await HandleDbUpdate(
+                ubicacion,
+                async () =>
+                {
+                    _context.Entry(ubicacion).State = EntityState.Modified;
+                    await _context.SaveChangesAsync();
+                },
+                "Error al actualizar la ubicación"
+            );
         }
 
         // POST: api/Ubicaciones
         [HttpPost]
-        public async Task<ActionResult<>> Post( item)
+        public async Task<ActionResult<Ubicacion>> PostUbicacion(Ubicacion ubicacion)
         {
-            return await HandleDbOperation(async () =>
+            if (!ModelState.IsValid)
             {
-                _context.Ubicaciones.Add(item);
-                await _context.SaveChangesAsync();
-                return item;
-            });
+                return BadRequest(ModelState);
+            }
+
+            // Validar que la sección existe
+            var seccionExiste = await _context.Secciones.AnyAsync(s => s.SeccionID == ubicacion.SeccionID);
+            if (!seccionExiste)
+            {
+                return BadRequest("La sección especificada no existe");
+            }
+
+            // Validar que el código no esté duplicado
+            var codigoExiste = await _context.Ubicaciones.AnyAsync(u => u.Codigo == ubicacion.Codigo);
+            if (codigoExiste)
+            {
+                return BadRequest("Ya existe una ubicación con este código");
+            }
+
+            return await HandleDbCreate(
+                ubicacion,
+                async () =>
+                {
+                    _context.Ubicaciones.Add(ubicacion);
+                    await _context.SaveChangesAsync();
+                },
+                "Error al crear la ubicación"
+            );
         }
 
         // DELETE: api/Ubicaciones/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> DeleteUbicacion(int id)
         {
-            return await HandleDbOperation(async () =>
-            {
-                var item = await _context.Ubicaciones.FindAsync(id);
-                if (item == null)
+            return await HandleDbDelete<Ubicacion>(
+                async () => await _context.Ubicaciones.FindAsync(id),
+                async (ubicacion) =>
                 {
-                    return null;
-                }
-
-                _context.Ubicaciones.Remove(item);
-                await _context.SaveChangesAsync();
-                return item;
-            });
+                    _context.Ubicaciones.Remove(ubicacion);
+                    await _context.SaveChangesAsync();
+                },
+                $"Error deleting ubicacion with ID {id}"
+            );
         }
     }
 }
