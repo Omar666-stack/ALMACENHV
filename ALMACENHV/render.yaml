@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: almacenhv
+    env: docker
+    repo: https://github.com/Omar666-stack/ALMACENHV.git
+    branch: master
+    buildCommand: dotnet publish -c Release
+    startCommand: dotnet ALMACENHV.dll
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ConnectionStrings__DefaultConnection
+        sync: false
+      - key: JWT__Secret
+        sync: false
+      - key: JWT__ValidIssuer
+        sync: false
+      - key: JWT__ValidAudience
+        sync: false
+    healthCheckPath: /api/health
+    autoDeploy: true
