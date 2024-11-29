@@ -4,11 +4,13 @@ using ALMACENHV.Models;
 using ALMACENHV.Data;
 using Microsoft.Extensions.Caching.Memory;
 using System.Collections.Concurrent;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ALMACENHV.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class UbicacionesController : BaseController
     {
         private readonly IMemoryCache _cache;
@@ -16,229 +18,188 @@ namespace ALMACENHV.Controllers
         private const string CACHE_KEY_ALL_UBICACIONES = "AllUbicaciones";
         private const string CACHE_KEY_UBICACION = "Ubicacion_";
         private readonly TimeSpan CACHE_DURATION = TimeSpan.FromMinutes(15);
+        private new readonly AlmacenContext _context;
+        private new readonly ILogger<UbicacionesController> _logger;
 
-        public UbicacionesController(AlmacenContext context, ILogger<UbicacionesController> logger, IMemoryCache cache)
-            : base(context, logger)
+        public UbicacionesController(
+            AlmacenContext context,
+            ILogger<UbicacionesController> logger,
+            IMemoryCache cache) : base(context, logger)
         {
-            _context = context;
-            _logger = logger;
-            _cache = cache;
+            _context = context ?? throw new ArgumentNullException(nameof(context));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _cache = cache ?? throw new ArgumentNullException(nameof(cache));
         }
 
-        // GET: api/Ubicaciones
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Ubicacion>>> GetUbicaciones()
+        public async Task<ActionResult<IEnumerable<Ubicacion>>> GetUbicaciones([FromQuery] bool includeInactive = false)
         {
-            try
-            {
-                // Intentar obtener ubicaciones del caché
-                if (_cache.TryGetValue(CACHE_KEY_ALL_UBICACIONES, out IEnumerable<Ubicacion> cachedUbicaciones))
+            return await HandleDbOperationList(
+                async () =>
                 {
-                    return Ok(cachedUbicaciones);
-                }
+                    string cacheKey = $"{CACHE_KEY_ALL_UBICACIONES}_{includeInactive}";
+                    if (!_cache.TryGetValue(cacheKey, out List<Ubicacion> ubicaciones))
+                    {
+                        var query = _context.Ubicaciones
+                            .Include(u => u.Seccion)
+                            .Include(u => u.Productos)
+                            .AsNoTracking();
 
-                // Si no está en caché, obtener de la base de datos
-                var ubicaciones = await _context.Ubicaciones
-                    .AsNoTracking()
-                    .Include(u => u.Seccion)
-                    .AsSplitQuery()
-                    .ToListAsync();
+                        if (!includeInactive)
+                        {
+                            query = query.Where(u => u.Activo);
+                        }
 
-                // Guardar en caché
-                var cacheEntryOptions = new MemoryCacheEntryOptions()
-                    .SetSlidingExpiration(CACHE_DURATION)
-                    .SetPriority(CacheItemPriority.Normal);
-
-                _cache.Set(CACHE_KEY_ALL_UBICACIONES, ubicaciones, cacheEntryOptions);
-
-                return Ok(ubicaciones);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al obtener ubicaciones");
-                return StatusCode(500, "Error interno del servidor");
-            }
+                        ubicaciones = await query.ToListAsync();
+                        _cache.Set(cacheKey, ubicaciones, CACHE_DURATION);
+                    }
+                    return ubicaciones;
+                },
+                "Error al obtener la lista de ubicaciones");
         }
 
-        // GET: api/Ubicaciones/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Ubicacion>> GetUbicacion(int id)
         {
-            try
-            {
-                string cacheKey = $"{CACHE_KEY_UBICACION}{id}";
-
-                // Intentar obtener ubicación del caché
-                if (_cache.TryGetValue(cacheKey, out Ubicacion cachedUbicacion))
+            string cacheKey = $"{CACHE_KEY_UBICACION}{id}";
+            
+            return await HandleDbOperation(
+                async () =>
                 {
-                    return Ok(cachedUbicacion);
-                }
-
-                // Obtener o crear el semáforo para este ID
-                var lockObj = _locks.GetOrAdd(id, _ => new SemaphoreSlim(1, 1));
-                await lockObj.WaitAsync();
-
-                try
-                {
-                    // Verificar caché nuevamente después de obtener el lock
-                    if (_cache.TryGetValue(cacheKey, out cachedUbicacion))
+                    if (!_cache.TryGetValue(cacheKey, out Ubicacion ubicacion))
                     {
-                        return Ok(cachedUbicacion);
+                        ubicacion = await _context.Ubicaciones
+                            .Include(u => u.Seccion)
+                            .Include(u => u.Productos)
+                            .AsNoTracking()
+                            .FirstOrDefaultAsync(u => u.UbicacionID == id);
+
+                        if (ubicacion != null)
+                        {
+                            _cache.Set(cacheKey, ubicacion, CACHE_DURATION);
+                        }
                     }
-
-                    var ubicacion = await _context.Ubicaciones
-                        .AsNoTracking()
-                        .Include(u => u.Seccion)
-                        .AsSplitQuery()
-                        .FirstOrDefaultAsync(u => u.UbicacionID == id);
-
-                    if (ubicacion == null)
-                    {
-                        return NotFound($"Ubicación con ID {id} no encontrada");
-                    }
-
-                    // Guardar en caché
-                    var cacheEntryOptions = new MemoryCacheEntryOptions()
-                        .SetSlidingExpiration(CACHE_DURATION)
-                        .SetPriority(CacheItemPriority.Normal);
-
-                    _cache.Set(cacheKey, ubicacion, cacheEntryOptions);
-
-                    return Ok(ubicacion);
-                }
-                finally
-                {
-                    lockObj.Release();
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Error al obtener ubicación con ID {id}");
-                return StatusCode(500, "Error interno del servidor");
-            }
+                    return ubicacion;
+                },
+                $"Error al obtener la ubicación con ID {id}");
         }
 
-        // PUT: api/Ubicaciones/5
+        [HttpGet("seccion/{seccionId}")]
+        public async Task<ActionResult<IEnumerable<Ubicacion>>> GetUbicacionesPorSeccion(int seccionId)
+        {
+            return await HandleDbOperationList(
+                async () =>
+                {
+                    var ubicaciones = await _context.Ubicaciones
+                        .Include(u => u.Seccion)
+                        .Include(u => u.Productos)
+                        .Where(u => u.SeccionID == seccionId && u.Activo)
+                        .AsNoTracking()
+                        .ToListAsync();
+                    return ubicaciones;
+                },
+                $"Error al obtener ubicaciones de la sección {seccionId}");
+        }
+
+        [HttpGet("disponibles")]
+        public async Task<ActionResult<IEnumerable<Ubicacion>>> GetUbicacionesDisponibles()
+        {
+            return await HandleDbOperationList(
+                async () =>
+                {
+                    var ubicaciones = await _context.Ubicaciones
+                        .Include(u => u.Seccion)
+                        .Include(u => u.Productos)
+                        .Where(u => u.Activo)
+                        .AsNoTracking()
+                        .ToListAsync();
+
+                    return ubicaciones.Where(u => u.EspacioDisponible > 0).ToList();
+                },
+                "Error al obtener ubicaciones disponibles");
+        }
+
         [HttpPut("{id}")]
         public async Task<IActionResult> PutUbicacion(int id, Ubicacion ubicacion)
         {
             if (id != ubicacion.UbicacionID)
             {
-                return BadRequest("El ID de la ubicación no coincide");
+                return BadRequest("El ID de la ubicación no coincide con el ID de la ruta");
             }
 
-            try
+            return await HandleDbUpdate(ubicacion, async () =>
             {
-                // Validar que la sección existe
-                var seccionExiste = await _context.Secciones.AnyAsync(s => s.SeccionID == ubicacion.SeccionID);
-                if (!seccionExiste)
-                {
-                    return BadRequest("La sección especificada no existe");
-                }
-
-                // Validar que el código no esté duplicado
-                var codigoExiste = await _context.Ubicaciones
-                    .AsNoTracking()
-                    .AnyAsync(u => u.Codigo == ubicacion.Codigo && u.UbicacionID != id);
-
-                if (codigoExiste)
-                {
-                    return BadRequest("Ya existe otra ubicación con este código");
-                }
-
+                ubicacion.FechaModificacion = DateTime.UtcNow;
                 _context.Entry(ubicacion).State = EntityState.Modified;
                 await _context.SaveChangesAsync();
-
-                // Invalidar caché
-                _cache.Remove(CACHE_KEY_ALL_UBICACIONES);
-                _cache.Remove($"{CACHE_KEY_UBICACION}{id}");
-
-                return NoContent();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!await UbicacionExists(id))
-                {
-                    return NotFound();
-                }
-                throw;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Error al actualizar ubicación con ID {id}");
-                return StatusCode(500, "Error interno del servidor");
-            }
+                InvalidateUbicacionCache(id);
+            });
         }
 
-        // POST: api/Ubicaciones
         [HttpPost]
         public async Task<ActionResult<Ubicacion>> PostUbicacion(Ubicacion ubicacion)
         {
-            try
+            return await HandleDbCreate(ubicacion, async () =>
             {
-                // Validar que la sección existe
-                var seccionExiste = await _context.Secciones.AnyAsync(s => s.SeccionID == ubicacion.SeccionID);
-                if (!seccionExiste)
-                {
-                    return BadRequest("La sección especificada no existe");
-                }
-
-                // Validar que el código no esté duplicado
-                var codigoExiste = await _context.Ubicaciones
-                    .AsNoTracking()
-                    .AnyAsync(u => u.Codigo == ubicacion.Codigo);
-
-                if (codigoExiste)
-                {
-                    return BadRequest("Ya existe una ubicación con este código");
-                }
-
+                ubicacion.FechaCreacion = DateTime.UtcNow;
                 _context.Ubicaciones.Add(ubicacion);
                 await _context.SaveChangesAsync();
-
-                // Invalidar caché de todas las ubicaciones
-                _cache.Remove(CACHE_KEY_ALL_UBICACIONES);
-
-                return CreatedAtAction(nameof(GetUbicacion), new { id = ubicacion.UbicacionID }, ubicacion);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al crear ubicación");
-                return StatusCode(500, "Error interno del servidor");
-            }
+                InvalidateUbicacionCache();
+            });
         }
 
-        // DELETE: api/Ubicaciones/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUbicacion(int id)
         {
-            try
+            var ubicacion = await _context.Ubicaciones.FindAsync(id);
+            if (ubicacion == null)
             {
-                var ubicacion = await _context.Ubicaciones.FindAsync(id);
-                if (ubicacion == null)
-                {
-                    return NotFound();
-                }
+                return NotFound();
+            }
 
-                _context.Ubicaciones.Remove(ubicacion);
+            return await HandleDbDelete(ubicacion, async () =>
+            {
+                ubicacion.Activo = false;
+                ubicacion.FechaModificacion = DateTime.UtcNow;
                 await _context.SaveChangesAsync();
-
-                // Invalidar caché
-                _cache.Remove(CACHE_KEY_ALL_UBICACIONES);
-                _cache.Remove($"{CACHE_KEY_UBICACION}{id}");
-
-                return NoContent();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Error al eliminar ubicación con ID {id}");
-                return StatusCode(500, "Error interno del servidor");
-            }
+                InvalidateUbicacionCache(id);
+            });
         }
 
-        private async Task<bool> UbicacionExists(int id)
+        [HttpPatch("{id}/estado")]
+        public async Task<IActionResult> CambiarEstadoUbicacion(int id, [FromBody] bool nuevoEstado)
         {
-            return await _context.Ubicaciones.AnyAsync(e => e.UbicacionID == id);
+            var ubicacion = await _context.Ubicaciones
+                .Include(u => u.Productos)
+                .FirstOrDefaultAsync(u => u.UbicacionID == id);
+
+            if (ubicacion == null)
+            {
+                return NotFound();
+            }
+
+            if (!nuevoEstado && ubicacion.Productos.Any())
+            {
+                return BadRequest("No se puede desactivar una ubicación que tiene productos almacenados");
+            }
+
+            return await HandleDbUpdate(ubicacion, async () =>
+            {
+                ubicacion.Activo = nuevoEstado;
+                ubicacion.FechaModificacion = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
+                InvalidateUbicacionCache(id);
+            });
+        }
+
+        private void InvalidateUbicacionCache(int? ubicacionId = null)
+        {
+            _cache.Remove(CACHE_KEY_ALL_UBICACIONES + "_true");
+            _cache.Remove(CACHE_KEY_ALL_UBICACIONES + "_false");
+            if (ubicacionId.HasValue)
+            {
+                _cache.Remove($"{CACHE_KEY_UBICACION}{ubicacionId}");
+            }
         }
     }
 }

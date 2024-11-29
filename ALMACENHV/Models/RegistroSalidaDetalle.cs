@@ -3,31 +3,38 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ALMACENHV.Models
 {
+    [Table("RegistroSalidaDetalles")]
     public class RegistroSalidaDetalle
     {
         [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int RegistroSalidaDetalleID { get; set; }
-
-        [NotMapped]
-        public int Id { get => RegistroSalidaDetalleID; set => RegistroSalidaDetalleID = value; }
-
-        [Required]
-        public int Cantidad { get; set; }
-
-        [Required]
-        [Column(TypeName = "decimal(18,2)")]
-        public decimal PrecioUnitario { get; set; }
-
-        [Required]
-        public int ProductoID { get; set; }
 
         [Required]
         public int RegistroSalidaID { get; set; }
 
+        [ForeignKey("RegistroSalidaID")]
+        public virtual RegistroSalida? RegistroSalida { get; set; }
+
+        [Required]
+        public int ProductoID { get; set; }
+
         [ForeignKey("ProductoID")]
         public virtual Producto? Producto { get; set; }
 
-        [ForeignKey("RegistroSalidaID")]
-        public virtual RegistroSalida? RegistroSalida { get; set; }
+        [Required]
+        [Range(1, int.MaxValue, ErrorMessage = "La cantidad debe ser mayor a 0")]
+        public int Cantidad { get; set; }
+
+        [Required]
+        [Column(TypeName = "varchar(200)")]
+        [StringLength(200, ErrorMessage = "La observación no puede exceder los 200 caracteres")]
+        public string Observacion { get; set; } = string.Empty;
+
+        [Required]
+        public DateTime FechaRegistro { get; set; } = DateTime.UtcNow;
+
+        [Required]
+        public bool Activo { get; set; } = true;
     }
 }

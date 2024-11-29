@@ -2,32 +2,27 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-# Copiar y restaurar dependencias
-COPY ["ALMACENHV/ALMACENHV.csproj", "ALMACENHV/"]
-RUN dotnet restore "ALMACENHV/ALMACENHV.csproj"
+# Restaurar dependencias
+COPY ["ALMACENHV/ALMACENHV.csproj", "./"]
+RUN dotnet restore "ALMACENHV.csproj"
 
-# Copiar el resto del código y construir
+# Copiar y publicar
 COPY . .
-WORKDIR "/src/ALMACENHV"
-RUN dotnet build "ALMACENHV.csproj" -c Release -o /app/build
+RUN dotnet publish -c Release -o /app/publish --no-restore
 
-# Publish stage
-FROM build AS publish
-RUN dotnet publish "ALMACENHV.csproj" -c Release -o /app/publish /p:UseAppHost=false
-
-# Final stage
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
+# Runtime stage
+FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
-COPY --from=publish /app/publish .
+COPY --from=build /app/publish .
 
-# Configurar variables de entorno para Render
+# Configuración de la aplicación
 ENV ASPNETCORE_URLS=http://+:${PORT}
 ENV ASPNETCORE_ENVIRONMENT=Production
-ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
+ENV TZ=America/Lima
 
-# Health check
+# Health check más simple
 HEALTHCHECK --interval=30s --timeout=3s \
-    CMD curl -f http://localhost:${PORT}/api/Usuarios || exit 1
+    CMD wget -qO- http://localhost:${PORT}/health || exit 1
 
-# Punto de entrada
+EXPOSE ${PORT}
 ENTRYPOINT ["dotnet", "ALMACENHV.dll"]

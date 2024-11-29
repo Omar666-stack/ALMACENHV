@@ -169,3 +169,4 @@ c:\Users\Lenovo\source\repos\ALMACENHV\ALMACENHV\ALMACENHV\obj\Release\net8.0\re
 c:\Users\Lenovo\source\repos\ALMACENHV\ALMACENHV\ALMACENHV\obj\Release\net8.0\ALMACENHV.pdb
 c:\Users\Lenovo\source\repos\ALMACENHV\ALMACENHV\ALMACENHV\obj\Release\net8.0\ALMACENHV.genruntimeconfig.cache
 c:\Users\Lenovo\source\repos\ALMACENHV\ALMACENHV\ALMACENHV\obj\Release\net8.0\ref\ALMACENHV.dll
+c:\Users\Lenovo\source\repos\ALMACENHV\ALMACENHV\ALMACENHV\obj\Release\net8.0\ALMACENHV.sourcelink.json

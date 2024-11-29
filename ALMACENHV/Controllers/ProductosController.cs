@@ -2,26 +2,23 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ALMACENHV.Models;
 using ALMACENHV.Data;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Caching.Memory;
-using System.Collections.Concurrent;
 
 namespace ALMACENHV.Controllers
 {
-    [ApiController]
+    [Authorize]
     [Route("api/[controller]")]
+    [ApiController]
     public class ProductosController : BaseController
     {
         private readonly IMemoryCache _cache;
-        private static readonly ConcurrentDictionary<int, SemaphoreSlim> _locks = new();
-        private const string CACHE_KEY_ALL_PRODUCTOS = "AllProductos";
-        private const string CACHE_KEY_PRODUCTO = "Producto_";
-        private readonly TimeSpan CACHE_DURATION = TimeSpan.FromMinutes(15);
+        private const string ProductosKey = "productos_all";
+        private const string ProductoKey = "producto_";
 
-        public ProductosController(AlmacenContext context, ILogger<ProductosController> logger, IMemoryCache cache)
+        public ProductosController(AlmacenContext context, ILogger<ProductosController> logger, IMemoryCache cache) 
             : base(context, logger)
         {
-            _context = context;
-            _logger = logger;
             _cache = cache;
         }
 
@@ -29,93 +26,47 @@ namespace ALMACENHV.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Producto>>> GetProductos()
         {
-            try
+            return await HandleDbOperationList(async () =>
             {
-                // Intentar obtener productos del caché
-                if (_cache.TryGetValue(CACHE_KEY_ALL_PRODUCTOS, out IEnumerable<Producto> cachedProductos))
+                if (!_cache.TryGetValue(ProductosKey, out List<Producto> productos))
                 {
-                    return Ok(cachedProductos);
+                    productos = await _context.Productos
+                        .Include(p => p.Ubicacion)
+                        .Where(p => p.Activo)
+                        .ToListAsync();
+
+                    var cacheEntryOptions = new MemoryCacheEntryOptions()
+                        .SetSlidingExpiration(TimeSpan.FromMinutes(5));
+
+                    _cache.Set(ProductosKey, productos, cacheEntryOptions);
                 }
-
-                // Si no está en caché, obtener de la base de datos
-                var productos = await _context.Productos
-                    .AsNoTracking()
-                    .Include(p => p.Seccion)
-                    .AsSplitQuery()
-                    .ToListAsync();
-
-                // Guardar en caché
-                var cacheEntryOptions = new MemoryCacheEntryOptions()
-                    .SetSlidingExpiration(CACHE_DURATION)
-                    .SetPriority(CacheItemPriority.Normal);
-
-                _cache.Set(CACHE_KEY_ALL_PRODUCTOS, productos, cacheEntryOptions);
-
-                return Ok(productos);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al obtener productos");
-                return StatusCode(500, "Error interno del servidor");
-            }
+                return productos;
+            });
         }
 
         // GET: api/Productos/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Producto>> GetProducto(int id)
         {
-            try
+            return await HandleDbOperation(async () =>
             {
-                string cacheKey = $"{CACHE_KEY_PRODUCTO}{id}";
-
-                // Intentar obtener producto del caché
-                if (_cache.TryGetValue(cacheKey, out Producto cachedProducto))
+                var cacheKey = $"{ProductoKey}{id}";
+                if (!_cache.TryGetValue(cacheKey, out Producto producto))
                 {
-                    return Ok(cachedProducto);
-                }
+                    producto = await _context.Productos
+                        .Include(p => p.Ubicacion)
+                        .FirstOrDefaultAsync(p => p.ProductoID == id && p.Activo);
 
-                // Obtener o crear el semáforo para este ID
-                var lockObj = _locks.GetOrAdd(id, _ => new SemaphoreSlim(1, 1));
-                await lockObj.WaitAsync();
-
-                try
-                {
-                    // Verificar caché nuevamente después de obtener el lock
-                    if (_cache.TryGetValue(cacheKey, out cachedProducto))
+                    if (producto != null)
                     {
-                        return Ok(cachedProducto);
+                        var cacheEntryOptions = new MemoryCacheEntryOptions()
+                            .SetSlidingExpiration(TimeSpan.FromMinutes(5));
+
+                        _cache.Set(cacheKey, producto, cacheEntryOptions);
                     }
-
-                    var producto = await _context.Productos
-                        .AsNoTracking()
-                        .Include(p => p.Seccion)
-                        .AsSplitQuery()
-                        .FirstOrDefaultAsync(p => p.ProductoID == id);
-
-                    if (producto == null)
-                    {
-                        return NotFound($"Producto con ID {id} no encontrado");
-                    }
-
-                    // Guardar en caché
-                    var cacheEntryOptions = new MemoryCacheEntryOptions()
-                        .SetSlidingExpiration(CACHE_DURATION)
-                        .SetPriority(CacheItemPriority.Normal);
-
-                    _cache.Set(cacheKey, producto, cacheEntryOptions);
-
-                    return Ok(producto);
                 }
-                finally
-                {
-                    lockObj.Release();
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Error al obtener producto con ID {id}");
-                return StatusCode(500, "Error interno del servidor");
-            }
+                return producto;
+            });
         }
 
         // PUT: api/Productos/5
@@ -127,113 +78,120 @@ namespace ALMACENHV.Controllers
                 return BadRequest();
             }
 
-            try
+            return await HandleDbUpdate(producto, async () =>
             {
-                // Validar que el código no esté duplicado
-                var codigoExiste = await _context.Productos
-                    .AsNoTracking()
-                    .AnyAsync(p => p.Codigo == producto.Codigo && p.ProductoID != id);
-
-                if (codigoExiste)
+                // Validar que la ubicación existe y está activa
+                var ubicacion = await _context.Ubicaciones
+                    .FirstOrDefaultAsync(u => u.UbicacionID == producto.UbicacionID && u.Activo);
+                
+                if (ubicacion == null)
                 {
-                    return BadRequest("Ya existe otro producto con este código");
+                    throw new InvalidOperationException("La ubicación especificada no existe o no está activa");
                 }
 
+                if (producto.Stock < producto.StockMinimo)
+                {
+                    throw new InvalidOperationException("El stock no puede ser menor al stock mínimo");
+                }
+
+                producto.FechaModificacion = DateTime.UtcNow;
                 _context.Entry(producto).State = EntityState.Modified;
                 await _context.SaveChangesAsync();
-
-                // Invalidar caché
-                _cache.Remove(CACHE_KEY_ALL_PRODUCTOS);
-                _cache.Remove($"{CACHE_KEY_PRODUCTO}{id}");
-
-                return NoContent();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!await ProductoExists(id))
-                {
-                    return NotFound();
-                }
-                throw;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Error al actualizar producto con ID {id}");
-                return StatusCode(500, "Error interno del servidor");
-            }
+                _cache.Remove(ProductosKey);
+                _cache.Remove($"{ProductoKey}{id}");
+            });
         }
 
         // POST: api/Productos
         [HttpPost]
         public async Task<ActionResult<Producto>> PostProducto(Producto producto)
         {
-            try
+            return await HandleDbCreate(producto, async () =>
             {
-                // Validar que el código no esté duplicado
-                var codigoExiste = await _context.Productos
-                    .AsNoTracking()
-                    .AnyAsync(p => p.Codigo == producto.Codigo);
-
-                if (codigoExiste)
+                // Validar que la ubicación existe y está activa
+                var ubicacion = await _context.Ubicaciones
+                    .FirstOrDefaultAsync(u => u.UbicacionID == producto.UbicacionID && u.Activo);
+                
+                if (ubicacion == null)
                 {
-                    return BadRequest("Ya existe un producto con este código");
+                    throw new InvalidOperationException("La ubicación especificada no existe o no está activa");
                 }
 
+                if (producto.Stock < producto.StockMinimo)
+                {
+                    throw new InvalidOperationException("El stock inicial no puede ser menor al stock mínimo");
+                }
+
+                producto.FechaCreacion = DateTime.UtcNow;
                 _context.Productos.Add(producto);
                 await _context.SaveChangesAsync();
-
-                // Invalidar caché de todos los productos
-                _cache.Remove(CACHE_KEY_ALL_PRODUCTOS);
-
-                return CreatedAtAction(nameof(GetProducto), new { id = producto.ProductoID }, producto);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al crear producto");
-                return StatusCode(500, "Error interno del servidor");
-            }
+                _cache.Remove(ProductosKey);
+            });
         }
 
         // DELETE: api/Productos/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteProducto(int id)
         {
-            try
+            return await HandleDbDelete<Producto>(null, async () =>
             {
                 var producto = await _context.Productos.FindAsync(id);
                 if (producto == null)
                 {
-                    return NotFound();
+                    return;
                 }
 
-                // Verificar si el producto tiene registros asociados
-                var tieneRegistros = await _context.RegistroEntradas.AnyAsync(r => r.ProductoID == id) ||
-                                   await _context.RegistroSalidas.AnyAsync(r => r.ProductoID == id);
-
-                if (tieneRegistros)
-                {
-                    return BadRequest("No se puede eliminar el producto porque tiene registros asociados");
-                }
-
-                _context.Productos.Remove(producto);
+                producto.Activo = false;
                 await _context.SaveChangesAsync();
-
-                // Invalidar caché
-                _cache.Remove(CACHE_KEY_ALL_PRODUCTOS);
-                _cache.Remove($"{CACHE_KEY_PRODUCTO}{id}");
-
-                return NoContent();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Error al eliminar producto con ID {id}");
-                return StatusCode(500, "Error interno del servidor");
-            }
+                _cache.Remove(ProductosKey);
+                _cache.Remove($"{ProductoKey}{id}");
+            });
         }
 
-        private async Task<bool> ProductoExists(int id)
+        // GET: api/Productos/Stock/{id}
+        [HttpGet("Stock/{id}")]
+        public async Task<ActionResult<int>> GetStock(int id)
         {
-            return await _context.Productos.AnyAsync(e => e.ProductoID == id);
+            var producto = await _context.Productos.FindAsync(id);
+            if (producto == null)
+            {
+                return NotFound();
+            }
+
+            return producto.Stock;
+        }
+
+        // PUT: api/Productos/Stock/{id}
+        [HttpPut("Stock/{id}")]
+        public async Task<IActionResult> UpdateStock(int id, [FromBody] int cantidad)
+        {
+            var producto = await _context.Productos.FindAsync(id);
+            if (producto == null || !producto.Activo)
+            {
+                return NotFound();
+            }
+
+            int nuevoStock = producto.Stock + cantidad;
+            
+            if (nuevoStock < 0)
+            {
+                return BadRequest("No hay suficiente stock disponible");
+            }
+
+            if (nuevoStock < producto.StockMinimo)
+            {
+                // Podríamos agregar aquí lógica para notificar stock bajo
+                _logger.LogWarning($"Stock bajo para producto {producto.Codigo}: {nuevoStock} unidades (mínimo: {producto.StockMinimo})");
+            }
+
+            producto.Stock = nuevoStock;
+            producto.FechaModificacion = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
+            _cache.Remove(ProductosKey);
+            _cache.Remove($"{ProductoKey}{id}");
+
+            return NoContent();
         }
     }
 }

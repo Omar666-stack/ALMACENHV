@@ -1,47 +1,49 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 
 namespace ALMACENHV.Models
 {
+    [Table("Usuarios")]
+    [Index(nameof(Email), IsUnique = true)]
     public class Usuario
     {
         [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int UsuarioID { get; set; }
-        
+
         [Required]
-        [StringLength(50)]
-        public string NombreUsuario { get; set; } = string.Empty;
-        
-        [Required]
-        [StringLength(100)]
-        public string Password { get; set; } = string.Empty;
-        
-        [Required]
-        [StringLength(50)]
+        [Column(TypeName = "varchar(100)")]
+        [StringLength(100, MinimumLength = 3, ErrorMessage = "El nombre debe tener entre 3 y 100 caracteres")]
         public string Nombre { get; set; } = string.Empty;
-        
+
         [Required]
-        [StringLength(50)]
+        [Column(TypeName = "varchar(100)")]
+        [StringLength(100, MinimumLength = 3, ErrorMessage = "El apellido debe tener entre 3 y 100 caracteres")]
         public string Apellido { get; set; } = string.Empty;
-        
+
         [Required]
-        [StringLength(100)]
-        [EmailAddress]
+        [Column(TypeName = "varchar(100)")]
+        [StringLength(100, ErrorMessage = "El email no puede exceder los 100 caracteres")]
+        [EmailAddress(ErrorMessage = "El formato del email no es válido")]
         public string Email { get; set; } = string.Empty;
 
+        [Required]
+        [Column(TypeName = "varchar(100)")]
+        public string Password { get; set; } = string.Empty;
+
+        [Required]
         public int RolID { get; set; }
-        public int CargoID { get; set; }
 
         [ForeignKey("RolID")]
         public virtual Rol? Rol { get; set; }
 
-        [ForeignKey("CargoID")]
-        public virtual Cargo? Cargo { get; set; }
+        [Required]
+        public bool Activo { get; set; } = true;
 
-        public virtual ICollection<Apunte> Apuntes { get; set; } = new List<Apunte>();
-        public virtual ICollection<Evento> Eventos { get; set; } = new List<Evento>();
-        public virtual ICollection<RegistroEntrada> RegistroEntradas { get; set; } = new List<RegistroEntrada>();
-        public virtual ICollection<RegistroSalida> RegistroSalidas { get; set; } = new List<RegistroSalida>();
-        public virtual ICollection<RegistroIngreso> RegistroIngresos { get; set; } = new List<RegistroIngreso>();
+        [Required]
+        public DateTime FechaCreacion { get; set; } = DateTime.UtcNow;
+
+        public DateTime? FechaModificacion { get; set; }
     }
 }

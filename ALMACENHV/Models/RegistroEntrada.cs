@@ -3,47 +3,29 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ALMACENHV.Models
 {
+    [Table("RegistroEntradas")]
     public class RegistroEntrada
     {
         [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int RegistroEntradaID { get; set; }
-
-        [NotMapped]
-        public int Id { get => RegistroEntradaID; set => RegistroEntradaID = value; }
-
-        [Required]
-        public DateTime FechaRegistro { get; set; }
-
-        [Required]
-        [StringLength(100)]
-        public string NumeroDocumento { get; set; } = string.Empty;
-
-        [StringLength(500)]
-        public string? Observaciones { get; set; }
 
         [Required]
         public int UsuarioID { get; set; }
 
-        [Required]
-        public int UbicacionID { get; set; }
-
-        [Required]
-        public int ProveedorID { get; set; }
-
-        [Required]
-        public int ProductoID { get; set; }
-
         [ForeignKey("UsuarioID")]
         public virtual Usuario? Usuario { get; set; }
 
-        [ForeignKey("UbicacionID")]
-        public virtual Ubicacion? Ubicacion { get; set; }
+        [Required]
+        [Column(TypeName = "varchar(200)")]
+        [StringLength(200, ErrorMessage = "La observación no puede exceder los 200 caracteres")]
+        public string Observacion { get; set; } = string.Empty;
 
-        [ForeignKey("ProveedorID")]
-        public virtual Proveedor? Proveedor { get; set; }
+        [Required]
+        public DateTime FechaRegistro { get; set; } = DateTime.UtcNow;
 
-        [ForeignKey("ProductoID")]
-        public virtual Producto? Producto { get; set; }
+        [Required]
+        public bool Activo { get; set; } = true;
 
         public virtual ICollection<RegistroEntradaDetalle> Detalles { get; set; } = new List<RegistroEntradaDetalle>();
     }

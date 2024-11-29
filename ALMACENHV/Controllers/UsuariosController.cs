@@ -2,124 +2,46 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ALMACENHV.Models;
 using ALMACENHV.Data;
-using Microsoft.Extensions.Caching.Memory;
-using System.Collections.Concurrent;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace ALMACENHV.Controllers
 {
-    [ApiController]
     [Route("api/[controller]")]
+    [ApiController]
+    [Authorize]
     public class UsuariosController : BaseController
     {
-        private readonly IMemoryCache _cache;
-        private static readonly ConcurrentDictionary<int, SemaphoreSlim> _locks = new();
-        private const string CACHE_KEY_ALL_USERS = "AllUsers";
-        private const string CACHE_KEY_USER = "User_";
-        private readonly TimeSpan CACHE_DURATION = TimeSpan.FromMinutes(15);
-        private new readonly AlmacenContext _context;
-        private new readonly ILogger<UsuariosController> _logger;
+        private readonly IConfiguration _configuration;
 
-        public UsuariosController(AlmacenContext context, ILogger<UsuariosController> logger, IMemoryCache cache)
+        public UsuariosController(AlmacenContext context, ILogger<UsuariosController> logger, IConfiguration configuration)
             : base(context, logger)
         {
-            _context = context;
-            _logger = logger;
-            _cache = cache;
+            _configuration = configuration;
         }
 
         // GET: api/Usuarios
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Usuario>>> GetUsuarios()
         {
-            try
-            {
-                // Intentar obtener usuarios del caché
-                if (_cache.TryGetValue(CACHE_KEY_ALL_USERS, out IEnumerable<Usuario> cachedUsers))
-                {
-                    return Ok(cachedUsers);
-                }
-
-                // Si no está en caché, obtener de la base de datos
-                var usuarios = await _context.Usuarios
-                    .AsNoTracking()
-                    .Include(u => u.Cargo)
+            return await HandleDbOperationList(async () =>
+                await _context.Usuarios
                     .Include(u => u.Rol)
-                    .AsSplitQuery()
-                    .ToListAsync();
-
-                // Guardar en caché
-                var cacheEntryOptions = new MemoryCacheEntryOptions()
-                    .SetSlidingExpiration(CACHE_DURATION)
-                    .SetPriority(CacheItemPriority.Normal);
-
-                _cache.Set(CACHE_KEY_ALL_USERS, usuarios, cacheEntryOptions);
-
-                return Ok(usuarios);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al obtener usuarios");
-                return StatusCode(500, "Error interno del servidor");
-            }
+                    .Where(u => u.Activo)
+                    .ToListAsync());
         }
 
         // GET: api/Usuarios/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Usuario>> GetUsuario(int id)
         {
-            try
-            {
-                string cacheKey = $"{CACHE_KEY_USER}{id}";
-
-                // Intentar obtener usuario del caché
-                if (_cache.TryGetValue(cacheKey, out Usuario cachedUser))
-                {
-                    return Ok(cachedUser);
-                }
-
-                // Obtener o crear el semáforo para este ID
-                var lockObj = _locks.GetOrAdd(id, _ => new SemaphoreSlim(1, 1));
-                await lockObj.WaitAsync();
-
-                try
-                {
-                    // Verificar caché nuevamente después de obtener el lock
-                    if (_cache.TryGetValue(cacheKey, out cachedUser))
-                    {
-                        return Ok(cachedUser);
-                    }
-
-                    var usuario = await _context.Usuarios
-                        .AsNoTracking()
-                        .Include(u => u.Cargo)
-                        .Include(u => u.Rol)
-                        .AsSplitQuery()
-                        .FirstOrDefaultAsync(u => u.UsuarioID == id);
-
-                    if (usuario == null)
-                    {
-                        return NotFound($"Usuario con ID {id} no encontrado");
-                    }
-
-                    // Guardar en caché
-                    var cacheEntryOptions = new MemoryCacheEntryOptions()
-                        .SetSlidingExpiration(CACHE_DURATION)
-                        .SetPriority(CacheItemPriority.Normal);
-
-                    _cache.Set(cacheKey, usuario, cacheEntryOptions);
-
-                    return Ok(usuario);
-                }
-                finally
-                {
-                    lockObj.Release();
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Error al obtener usuario con ID {id}");
-                return StatusCode(500, "Error interno del servidor");
-            }
+            return await HandleDbOperation(async () =>
+                await _context.Usuarios
+                    .Include(u => u.Rol)
+                    .FirstOrDefaultAsync(u => u.UsuarioID == id));
         }
 
         // PUT: api/Usuarios/5
@@ -131,79 +53,94 @@ namespace ALMACENHV.Controllers
                 return BadRequest();
             }
 
-            try
+            return await HandleDbUpdate(usuario, async () =>
             {
+                usuario.FechaModificacion = DateTime.UtcNow;
                 _context.Entry(usuario).State = EntityState.Modified;
                 await _context.SaveChangesAsync();
-
-                // Invalidar caché
-                _cache.Remove(CACHE_KEY_ALL_USERS);
-                _cache.Remove($"{CACHE_KEY_USER}{id}");
-
-                return NoContent();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!await UsuarioExists(id))
-                {
-                    return NotFound();
-                }
-                throw;
-            }
+            });
         }
 
         // POST: api/Usuarios
         [HttpPost]
+        [AllowAnonymous]
         public async Task<ActionResult<Usuario>> PostUsuario(Usuario usuario)
         {
-            try
+            return await HandleDbCreate(usuario, async () =>
             {
+                usuario.FechaCreacion = DateTime.UtcNow;
+                usuario.Password = BCrypt.Net.BCrypt.HashPassword(usuario.Password);
                 _context.Usuarios.Add(usuario);
                 await _context.SaveChangesAsync();
-
-                // Invalidar caché de todos los usuarios
-                _cache.Remove(CACHE_KEY_ALL_USERS);
-
-                return CreatedAtAction(nameof(GetUsuario), new { id = usuario.UsuarioID }, usuario);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al crear usuario");
-                return StatusCode(500, "Error interno del servidor");
-            }
+            });
         }
 
         // DELETE: api/Usuarios/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUsuario(int id)
         {
-            try
+            var usuario = await _context.Usuarios.FindAsync(id);
+            if (usuario == null)
             {
-                var usuario = await _context.Usuarios.FindAsync(id);
-                if (usuario == null)
-                {
-                    return NotFound();
-                }
+                return NotFound();
+            }
 
-                _context.Usuarios.Remove(usuario);
+            return await HandleDbDelete(usuario, async () =>
+            {
+                usuario.Activo = false;
+                usuario.FechaModificacion = DateTime.UtcNow;
                 await _context.SaveChangesAsync();
-
-                // Invalidar caché
-                _cache.Remove(CACHE_KEY_ALL_USERS);
-                _cache.Remove($"{CACHE_KEY_USER}{id}");
-
-                return NoContent();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Error al eliminar usuario con ID {id}");
-                return StatusCode(500, "Error interno del servidor");
-            }
+            });
         }
 
-        private async Task<bool> UsuarioExists(int id)
+        // POST: api/Usuarios/login
+        [HttpPost("login")]
+        [AllowAnonymous]
+        public async Task<ActionResult<string>> Login([FromBody] LoginModel model)
         {
-            return await _context.Usuarios.AnyAsync(e => e.UsuarioID == id);
+            var usuario = await _context.Usuarios
+                .Include(u => u.Rol)
+                .FirstOrDefaultAsync(u => u.NombreUsuario == model.NombreUsuario && u.Activo);
+
+            if (usuario == null || !BCrypt.Net.BCrypt.Verify(model.Password, usuario.Password))
+            {
+                return Unauthorized("Usuario o contraseña incorrectos");
+            }
+
+            var token = GenerateJwtToken(usuario);
+            return Ok(new { token });
         }
+
+        private string GenerateJwtToken(Usuario user)
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes(_configuration["JWT:Token"] ?? throw new InvalidOperationException("JWT Token not found"));
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new[]
+                {
+                    new Claim(ClaimTypes.NameIdentifier, user.UsuarioID.ToString()),
+                    new Claim(ClaimTypes.Name, user.NombreUsuario),
+                    new Claim(ClaimTypes.Role, user.Rol?.Nombre ?? "Usuario"),
+                    new Claim("FullName", $"{user.Nombre} {user.Apellido}")
+                }),
+                Expires = DateTime.UtcNow.AddDays(7),
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            };
+
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            return tokenHandler.WriteToken(token);
+        }
+
+        private bool UsuarioExists(int id)
+        {
+            return _context.Usuarios.Any(e => e.UsuarioID == id);
+        }
+    }
+
+    public class LoginModel
+    {
+        public string NombreUsuario { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
     }
 }

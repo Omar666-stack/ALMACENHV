@@ -13,14 +13,17 @@ namespace ALMACENHV.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class AuthController : BaseController
+    public class AuthController : ControllerBase
     {
+        private readonly AlmacenContext _context;
         private readonly IConfiguration _configuration;
+        private readonly ILogger<AuthController> _logger;
 
-        public AuthController(AlmacenContext context, ILogger<AuthController> logger, IConfiguration configuration)
-            : base(context, logger)
+        public AuthController(AlmacenContext context, IConfiguration configuration, ILogger<AuthController> logger)
         {
+            _context = context;
             _configuration = configuration;
+            _logger = logger;
         }
 
         [HttpPost("register")]
@@ -41,7 +44,8 @@ namespace ALMACENHV.Controllers
                     Email = request.Email,
                     Password = passwordHash,
                     RolID = request.RolID,
-                    CargoID = request.CargoID
+                    Activo = true,
+                    FechaCreacion = DateTime.UtcNow
                 };
 
                 _context.Usuarios.Add(usuario);
@@ -158,7 +162,6 @@ namespace ALMACENHV.Controllers
 
                 var usuario = await _context.Usuarios
                     .Include(u => u.Rol)
-                    .Include(u => u.Cargo)
                     .FirstOrDefaultAsync(u => u.UsuarioID == int.Parse(userId));
 
                 if (usuario == null)
@@ -188,7 +191,6 @@ namespace ALMACENHV.Controllers
         public string Email { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
         public int RolID { get; set; }
-        public int CargoID { get; set; }
     }
 
     public class ChangePasswordModel

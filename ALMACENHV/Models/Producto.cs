@@ -1,30 +1,31 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 
 namespace ALMACENHV.Models
 {
+    [Table("Productos")]
+    [Index(nameof(Codigo), IsUnique = true)]
     public class Producto
     {
         [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int ProductoID { get; set; }
 
-        [Required]
-        [StringLength(50)]
-        public string Codigo { get; set; }
+        [Required(ErrorMessage = "El código es requerido")]
+        [StringLength(20, MinimumLength = 3, ErrorMessage = "El código debe tener entre 3 y 20 caracteres")]
+        [Column(TypeName = "varchar(20)")]
+        public string Codigo { get; set; } = string.Empty;
 
-        [Required]
-        [StringLength(100)]
+        [Required(ErrorMessage = "El nombre es requerido")]
+        [StringLength(100, MinimumLength = 3, ErrorMessage = "El nombre debe tener entre 3 y 100 caracteres")]
+        [Column(TypeName = "varchar(100)")]
         public string Nombre { get; set; } = string.Empty;
 
-        [StringLength(200)]
-        public string? Descripcion { get; set; }
-
-        [Required]
-        [StringLength(50)]
-        public string CodigoInterno { get; set; } = string.Empty;
-
-        [Required]
-        public decimal PrecioUnitario { get; set; }
+        [Required(ErrorMessage = "La descripción es requerida")]
+        [StringLength(200, MinimumLength = 3, ErrorMessage = "La descripción debe tener entre 3 y 200 caracteres")]
+        [Column(TypeName = "varchar(200)")]
+        public string Descripcion { get; set; } = string.Empty;
 
         [Required]
         public int Stock { get; set; }
@@ -33,25 +34,17 @@ namespace ALMACENHV.Models
         public int StockMinimo { get; set; }
 
         [Required]
-        public int ProveedorID { get; set; }
-
-        [Required]
         public int UbicacionID { get; set; }
-
-        [Required]
-        public int SeccionID { get; set; }
-
-        [ForeignKey("ProveedorID")]
-        public virtual Proveedor? Proveedor { get; set; }
 
         [ForeignKey("UbicacionID")]
         public virtual Ubicacion? Ubicacion { get; set; }
 
-        [ForeignKey("SeccionID")]
-        public virtual Seccion? Seccion { get; set; }
+        [Required]
+        public bool Activo { get; set; } = true;
 
-        public virtual ICollection<RegistroEntradaDetalle> RegistroEntradaDetalles { get; set; } = new List<RegistroEntradaDetalle>();
-        public virtual ICollection<RegistroSalidaDetalle> RegistroSalidaDetalles { get; set; } = new List<RegistroSalidaDetalle>();
-        public virtual ICollection<RegistroIngresoDetalle> RegistroIngresoDetalles { get; set; } = new List<RegistroIngresoDetalle>();
+        [Required]
+        public DateTime FechaCreacion { get; set; } = DateTime.UtcNow;
+
+        public DateTime? FechaModificacion { get; set; }
     }
 }

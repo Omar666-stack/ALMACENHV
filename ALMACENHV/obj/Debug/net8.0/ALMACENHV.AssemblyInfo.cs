@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ALMACENHV")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e3880507228f9ef21bfa21429956accea7a92688")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+97e552fb7873689ac4df373b78759f8ff3ed3cfd")]
 [assembly: System.Reflection.AssemblyProductAttribute("ALMACENHV")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ALMACENHV")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -1,0 +1,31 @@
+# Directorios de desarrollo
+**/[Bb]in/
+**/[Oo]bj/
+**/[Ll]ogs/
+**/.vs/
+**/.vscode/
+**/*.user
+
+# Archivos de desarrollo
+appsettings.Development.json
+*.Development.json
+global.json
+
+# Archivos de Docker
+.dockerignore
+Dockerfile*
+
+# Archivos de Git
+.git/
+.gitignore
+
+# Archivos temporales
+**/[Tt]emp/
+**/*.tmp
+**/*.log
+
+# Archivos de documentación
+**/*.md
+LICENSE.txt
+*.txt
+!README.md
