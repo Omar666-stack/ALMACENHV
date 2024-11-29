@@ -135,6 +135,9 @@ app.UseSwaggerUI(c =>
     c.RoutePrefix = string.Empty;
 });
 
+// Añadir endpoint de health check
+app.MapGet("/health", () => Results.Ok("Healthy"));
+
 app.UseResponseCompression();
 app.UseCors();
 
@@ -148,8 +151,8 @@ app.MapControllers();
 
 try
 {
-    Log.Information("Iniciando la aplicación...");
-    app.Run();
+    Log.Information("Iniciando la aplicación en el puerto {Port}...", port);
+    await app.RunAsync();
 }
 catch (Exception ex)
 {
