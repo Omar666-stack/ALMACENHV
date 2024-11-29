@@ -62,7 +62,14 @@ builder.Services.AddDbContext<AlmacenContext>((serviceProvider, options) =>
             maxRetryDelay: TimeSpan.FromSeconds(30),
             errorNumbersToAdd: null);
         sqlOptions.CommandTimeout(30);
+        sqlOptions.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
     });
+    
+    // Habilitar el seguimiento de consultas LazyLoading
+    options.UseLazyLoadingProxies();
+    
+    // Configurar el comportamiento de cambio de seguimiento
+    options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTrackingWithIdentityResolution);
     
     if (builder.Environment.IsDevelopment())
     {
@@ -88,6 +95,9 @@ builder.Services.AddCors(options =>
 
 // Agregar caché distribuida
 builder.Services.AddDistributedMemoryCache();
+
+// Agregar caché en memoria para resultados de consultas
+builder.Services.AddMemoryCache();
 
 // Configurar compresión de respuesta
 builder.Services.AddResponseCompression(options =>
