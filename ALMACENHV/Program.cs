@@ -49,6 +49,9 @@ builder.Services.AddControllers(options =>
     options.JsonSerializerOptions.WriteIndented = false; 
 });
 
+// Agregar servicio de caché en memoria
+builder.Services.AddMemoryCache();
+
 // Configurar CORS para Render
 builder.Services.AddCors(options =>
 {
