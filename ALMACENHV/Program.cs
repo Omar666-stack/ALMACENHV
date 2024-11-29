@@ -49,12 +49,21 @@ builder.Services.AddControllers(options =>
     options.JsonSerializerOptions.WriteIndented = builder.Environment.IsDevelopment();
 });
 
-// Configurar la conexión a la base de datos
-builder.Services.AddDbContext<AlmacenContext>((serviceProvider, options) =>
+// Configurar CORS para Render
+builder.Services.AddCors(options =>
 {
-    var configuration = serviceProvider.GetRequiredService<IConfiguration>();
-    var connectionString = configuration.GetConnectionString("DefaultConnection");
-    
+    options.AddPolicy("AllowRender", builder =>
+    {
+        builder.WithOrigins("https://almacenhv.onrender.com")
+               .AllowAnyMethod()
+               .AllowAnyHeader();
+    });
+});
+
+// Configurar la conexión a la base de datos
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+builder.Services.AddDbContext<AlmacenContext>(options =>
+{
     options.UseSqlServer(connectionString, sqlOptions =>
     {
         sqlOptions.EnableRetryOnFailure(
@@ -106,19 +115,23 @@ builder.Services.AddResponseCompression(options =>
     options.Providers.Add<GzipCompressionProvider>();
 });
 
-// Configurar autenticación JWT
+// Configurar JWT
+var jwtSettings = builder.Configuration.GetSection("JWT");
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8
-                .GetBytes(builder.Configuration.GetSection("AppSettings:Token").Value!)),
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(jwtSettings["Token"] ?? 
+                    throw new InvalidOperationException("JWT Token not configured"))),
             ValidateIssuer = true,
             ValidateAudience = true,
-            ValidIssuer = "https://almacenhv.onrender.com",
-            ValidAudience = "https://almacenhv.onrender.com"
+            ValidateLifetime = true,
+            ValidIssuer = jwtSettings["ValidIssuer"],
+            ValidAudience = jwtSettings["ValidAudience"],
+            ClockSkew = TimeSpan.Zero
         };
     });
 
@@ -241,7 +254,7 @@ else
 app.UseHttpsRedirection();
 app.UseResponseCompression();
 app.UseErrorHandling(); 
-app.UseCors("AllowedOrigins");
+app.UseCors("AllowRender");
 
 app.UseAuthentication();
 app.UseAuthorization();
