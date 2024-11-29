@@ -35,27 +35,23 @@ builder.Host.UseSerilog();
 var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
 builder.WebHost.UseUrls($"http://+:{port}");
 
-// Add services to the container.
-builder.Services.AddControllers(options =>
+// Configurar servicios
+builder.Services.AddMemoryCache();
+builder.Services.AddResponseCompression(options =>
 {
-    // Añadir filtro de validación global
-    options.Filters.Add(new ValidateModelStateAttribute());
-    options.Filters.Add<ValidationExceptionMiddleware>();
-    options.ReturnHttpNotAcceptable = true;  
-})
-.AddJsonOptions(options =>
-{
-    options.JsonSerializerOptions.PropertyNamingPolicy = null;
-    options.JsonSerializerOptions.WriteIndented = false; 
+    options.Providers.Add<GzipCompressionProvider>();
+    options.EnableForHttps = true;
 });
 
-// Agregar servicio de caché en memoria
-builder.Services.AddMemoryCache();
+builder.Services.Configure<GzipCompressionProviderOptions>(options =>
+{
+    options.Level = CompressionLevel.Fastest;
+});
 
-// Configurar CORS para Render
+// Configurar CORS
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowRender", builder =>
+    options.AddDefaultPolicy(builder =>
     {
         builder.AllowAnyOrigin()
                .AllowAnyMethod()
@@ -63,59 +59,90 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Configurar la conexión a la base de datos
+// Configurar DbContext
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-builder.Services.AddDbContext<AlmacenContext>(options =>
-{
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString, sqlOptions =>
     {
         sqlOptions.EnableRetryOnFailure(
-            maxRetryCount: 5,
+            maxRetryCount: 3,
             maxRetryDelay: TimeSpan.FromSeconds(30),
             errorNumbersToAdd: null);
+    }));
+
+// Configurar JWT
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = false,
+            ValidateAudience = false,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(builder.Configuration["JWT:Token"] ?? throw new InvalidOperationException("JWT Token not configured"))
+            )
+        };
+    });
+
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add(new ValidateModelStateAttribute());
+    options.Filters.Add<ValidationExceptionMiddleware>();
+    options.ReturnHttpNotAcceptable = true;
+})
+.AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.PropertyNamingPolicy = null;
+    options.JsonSerializerOptions.WriteIndented = false;
+});
+
+// Configurar Swagger
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "ALMACENHV API", Version = "v1" });
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Description = "JWT Authorization header using the Bearer scheme",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer"
+    });
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
     });
 });
 
-builder.Services.AddEndpointsApiExplorer();
-
-// Swagger solo en desarrollo
-if (builder.Environment.IsDevelopment())
-{
-    builder.Services.AddSwaggerGen();
-}
-
 var app = builder.Build();
 
-// Middleware de manejo de errores
-app.UseMiddleware<ErrorHandlingMiddleware>();
-
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+// Configurar el pipeline de solicitudes HTTP
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "ALMACENHV API V1");
+    c.RoutePrefix = string.Empty;
+});
 
-app.UseHttpsRedirection();
-app.UseCors("AllowRender");
+app.UseResponseCompression();
+app.UseCors();
+
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Error handling básico
-app.Use(async (context, next) =>
-{
-    try
-    {
-        await next();
-    }
-    catch (Exception ex)
-    {
-        var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "Error no controlado");
-        context.Response.StatusCode = 500;
-        await context.Response.WriteAsJsonAsync(new { error = "Internal Server Error" });
-    }
-});
+// Middleware personalizado para manejo de errores
+app.UseMiddleware<ErrorHandlingMiddleware>();
 
 app.MapControllers();
 
@@ -126,7 +153,7 @@ try
 }
 catch (Exception ex)
 {
-    Log.Fatal(ex, "La aplicación falló al iniciar");
+    Log.Fatal(ex, "La aplicación se detuvo inesperadamente");
 }
 finally
 {
