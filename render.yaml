@@ -3,7 +3,11 @@ services:
     name: almacenhv
     env: docker
     plan: free
-    buildCommand: docker build -t app .
+    region: ohio
+    branch: master
+    dockerfilePath: Dockerfile
+    dockerContext: .
+    buildCommand: docker build --no-cache -t app .
     startCommand: docker run -p $PORT:$PORT app
     envVars:
       - key: ASPNETCORE_ENVIRONMENT
