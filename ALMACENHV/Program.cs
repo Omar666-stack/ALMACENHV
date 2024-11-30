@@ -103,16 +103,19 @@ builder.Services.AddAuthentication(x =>
 // Configurar CORS
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", builder =>
-        builder.AllowAnyOrigin()
+    options.AddPolicy("Production", builder =>
+    {
+        builder.WithOrigins("https://almacenhv.onrender.com")
                .AllowAnyMethod()
-               .AllowAnyHeader());
+               .AllowAnyHeader()
+               .AllowCredentials();
+    });
 });
 
 // Configurar caché
 builder.Services.AddMemoryCache(options =>
 {
-    options.SizeLimit = 512; // 512MB para el tier gratuito
+    options.SizeLimit = 128; // 128MB para el tier gratuito
 });
 
 var app = builder.Build();
@@ -134,7 +137,7 @@ else
 }
 
 app.UseHttpsRedirection();
-app.UseCors("AllowAll");
+app.UseCors("Production");
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseRateLimiter();
@@ -145,7 +148,7 @@ app.MapControllers();
 app.MapGet("/health", () => Results.Ok(new { Status = "Healthy", Timestamp = DateTime.UtcNow }));
 
 // Configurar el puerto
-var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+var port = Environment.GetEnvironmentVariable("PORT") ?? "10000";
 app.Urls.Add($"http://+:{port}");
 
 try
