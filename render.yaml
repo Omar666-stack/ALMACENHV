@@ -3,9 +3,5 @@ services:
     name: almacenhv
     env: docker
     plan: free
-    dockerfilePath: Dockerfile
     buildCommand: docker build -t app .
     startCommand: docker run -p $PORT:$PORT app
-    envVars:
-      - key: PORT
-        value: 10000
