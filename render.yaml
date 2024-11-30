@@ -2,7 +2,7 @@ services:
   - type: web
     name: almacenhv
     env: docker
-    dockerfilePath: ./Dockerfile
+    dockerfilePath: Dockerfile
     buildCommand: docker build -t almacenhv .
     startCommand: docker run -p $PORT:$PORT almacenhv
     envVars:
