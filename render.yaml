@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: almacenhv
+    env: docker
+    dockerfilePath: ./Dockerfile
+    buildCommand: docker build -t almacenhv .
+    startCommand: docker run -p $PORT:$PORT almacenhv
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: PORT
+        value: 10000
+      - key: TZ
+        value: America/Lima
