@@ -2,20 +2,17 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /app
 
-# Copy everything
-COPY . ./
-RUN dotnet restore "./ALMACENHV/ALMACENHV.csproj"
-RUN dotnet publish "./ALMACENHV/ALMACENHV.csproj" -c Release -o out
+COPY ["ALMACENHV/ALMACENHV/ALMACENHV.csproj", "ALMACENHV/ALMACENHV/"]
+RUN dotnet restore "ALMACENHV/ALMACENHV/ALMACENHV.csproj"
 
-# Runtime stage
+COPY . .
+RUN dotnet publish "ALMACENHV/ALMACENHV/ALMACENHV.csproj" -c Release -o /app/publish
+
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
-COPY --from=build /app/out .
+COPY --from=build /app/publish .
 
-# Environment variables
 ENV ASPNETCORE_URLS=http://+:${PORT}
-ENV ASPNETCORE_ENVIRONMENT=Production
-ENV TZ=America/Lima
-
 EXPOSE ${PORT}
+
 ENTRYPOINT ["dotnet", "ALMACENHV.dll"]
