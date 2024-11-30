@@ -3,7 +3,8 @@ services:
     name: almacenhv
     env: docker
     region: ohio
-    dockerfilePath: /Dockerfile
+    plan: free
+    branch: master
     buildCommand: docker build -t almacenhv .
     startCommand: docker run -p $PORT:$PORT almacenhv
     envVars:
