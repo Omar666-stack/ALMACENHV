@@ -1,30 +1,24 @@
 # Build stage
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-WORKDIR /src
+WORKDIR /source
 
-# Restaurar dependencias
-COPY ["ALMACENHV/ALMACENHV.csproj", "ALMACENHV/"]
-RUN dotnet restore "ALMACENHV/ALMACENHV.csproj"
+# Copy csproj and restore dependencies
+COPY ["ALMACENHV/ALMACENHV.csproj", "./"]
+RUN dotnet restore
 
-# Copiar y publicar
+# Copy the rest of the code
 COPY . .
-WORKDIR "/src/ALMACENHV"
-RUN dotnet publish "ALMACENHV.csproj" -c Release -o /app/publish
+RUN dotnet publish -c Release -o /app
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
-COPY --from=build /app/publish .
+COPY --from=build /app .
 
-# Configuración de la aplicación
+# Environment variables
 ENV ASPNETCORE_URLS=http://+:${PORT}
 ENV ASPNETCORE_ENVIRONMENT=Production
 ENV TZ=America/Lima
-ENV PORT=10000
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s \
-    CMD curl -f http://localhost:${PORT}/health || exit 1
 
 EXPOSE ${PORT}
 ENTRYPOINT ["dotnet", "ALMACENHV.dll"]
