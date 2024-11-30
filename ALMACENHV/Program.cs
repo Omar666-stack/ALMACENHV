@@ -78,7 +78,7 @@ builder.Services.AddDbContext<AlmacenContext>(options =>
     .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking));
 
 // Configurar JWT
-var jwtKey = builder.Configuration["JWT:Token"] ?? throw new InvalidOperationException("JWT Token not found in configuration");
+var jwtKey = builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key not found in configuration");
 var key = Encoding.ASCII.GetBytes(jwtKey);
 
 builder.Services.AddAuthentication(x =>
@@ -100,7 +100,7 @@ builder.Services.AddAuthentication(x =>
     };
 });
 
-// Configurar CORS
+// Configurar CORS para producción
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("Production", builder =>
@@ -129,11 +129,6 @@ if (app.Environment.IsDevelopment())
 else
 {
     app.UseHsts();
-    app.Use(async (context, next) =>
-    {
-        context.Response.Headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains";
-        await next();
-    });
 }
 
 app.UseHttpsRedirection();
@@ -145,15 +140,16 @@ app.UseRateLimiter();
 app.MapControllers();
 
 // Health check endpoint
-app.MapGet("/health", () => Results.Ok(new { Status = "Healthy", Timestamp = DateTime.UtcNow }));
+app.MapGet("/health", () => Results.Ok(new { Status = "Healthy", Timestamp = DateTime.UtcNow }))
+   .AllowAnonymous();
 
-// Configurar el puerto
+// Configurar el puerto desde la variable de entorno
 var port = Environment.GetEnvironmentVariable("PORT") ?? "10000";
 app.Urls.Add($"http://+:{port}");
 
 try
 {
-    Log.Information("Starting web host");
+    Log.Information("Starting web host on port {Port}", port);
     app.Run();
 }
 catch (Exception ex)
