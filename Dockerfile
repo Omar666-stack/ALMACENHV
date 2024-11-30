@@ -1,13 +1,17 @@
 # Build stage
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-WORKDIR /app
+WORKDIR /src
 
-COPY ["ALMACENHV.csproj", "ALMACENHV/"]
+# Copy csproj and restore dependencies
+COPY ["ALMACENHV/ALMACENHV.csproj", "ALMACENHV/"]
 RUN dotnet restore "ALMACENHV/ALMACENHV.csproj"
 
+# Copy everything else and build
 COPY . .
-RUN dotnet publish "ALMACENHV.csproj" -c Release -o /app/publish
+RUN dotnet build "ALMACENHV/ALMACENHV.csproj" -c Release -o /app/build
+RUN dotnet publish "ALMACENHV/ALMACENHV.csproj" -c Release -o /app/publish
 
+# Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
 COPY --from=build /app/publish .
