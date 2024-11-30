@@ -1,11 +1,13 @@
 services:
   - type: web
     name: almacenhv
-    env: docker
+    runtime: docker
+    repo: https://github.com/Omar666-stack/ALMACENHV.git
     region: ohio
     plan: free
     branch: master
-    buildCommand: docker build -t almacenhv .
+    rootDir: ALMACENHV
+    buildCommand: docker build -f ALMACENHV/Dockerfile -t almacenhv .
     startCommand: docker run -p $PORT:$PORT almacenhv
     envVars:
       - key: ASPNETCORE_ENVIRONMENT
