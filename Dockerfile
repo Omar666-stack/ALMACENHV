@@ -1,16 +1,14 @@
-# Build stage
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-WORKDIR /app
+WORKDIR /source
 
-# Copy everything and restore dependencies
+# Copy everything
 COPY . .
 RUN dotnet restore "./ALMACENHV/ALMACENHV.csproj"
-RUN dotnet publish "./ALMACENHV/ALMACENHV.csproj" -c Release -o out
+RUN dotnet publish "./ALMACENHV/ALMACENHV.csproj" -c Release -o /app/publish
 
-# Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
-COPY --from=build /app/out .
+COPY --from=build /app/publish .
 
 ENV ASPNETCORE_URLS=http://+:${PORT}
 EXPOSE ${PORT}
